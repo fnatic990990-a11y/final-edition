@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="UTF-8" />
+  <title>Logixperts - Smart Load Analyzer</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <style>
+    :root {
+      --bg: #020617;
+      --card: #111827;
+      --accent: #22c55e;
+      --accent-soft: rgba(34, 197, 94, 0.15);
+      --text: #e5e7eb;
+      --muted: #9ca3af;
+      --border: #1f2937;
+    }
+
+    * { box-sizing: border-box; padding: 0; margin: 0; font-family: system-ui, -apple-system, sans-serif; }
+
+    body {
+      background: radial-gradient(circle at top, #111827, #020617 55%);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 24px;
+    }
+
+    .page {
+      max-width: 900px;
+      width: 100%;
+      background: linear-gradient(135deg, rgba(15, 23, 42, 0.96), rgba(15, 23, 42, 0.98));
+      border-radius: 28px;
+      border: 1px solid var(--border);
+      padding: 32px;
+      box-shadow: 0 24px 60px rgba(0,0,0,0.5);
+    }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 32px;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+
+    .logo { font-size: 28px; font-weight: 800; color: var(--accent); letter-spacing: 3px; }
+    .logo-sub { font-size: 12px; color: var(--muted); margin-top: 4px; letter-spacing: 1px; }
+
+    .lang-toggle {
+      display: flex;
+      gap: 4px;
+      background: var(--bg);
+      padding: 4px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+    }
+
+    .lang-btn {
+      border: none;
+      background: transparent;
+      color: var(--muted);
+      font-size: 13px;
+      padding: 8px 16px;
+      border-radius: 999px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .lang-btn.active {
+      background: var(--accent-soft);
+      color: #bbf7d0;
+      font-weight: 600;
+    }
+
+    .hero {
+      text-align: center;
+      margin-bottom: 40px;
+    }
+
+    .hero-title {
+      font-size: 36px;
+      font-weight: 800;
+      margin-bottom: 16px;
+      background: linear-gradient(135deg, #22c55e, #4ade80);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .hero-subtitle {
+      font-size: 16px;
+      color: var(--muted);
+      max-width: 600px;
+      margin: 0 auto;
+      line-height: 1.7;
+    }
+
+    .features {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-top: 24px;
+    }
+
+    .feature-tag {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      padding: 8px 16px;
+      border-radius: 999px;
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    .feature-tag strong { color: #a7f3d0; }
+
+    .role-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 24px;
+      margin-bottom: 32px;
+    }
+
+    @media (max-width: 700px) {
+      .role-grid { grid-template-columns: 1fr; }
+      .hero-title { font-size: 28px; }
+    }
+
+    .role-card {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      padding: 28px;
+      text-align: center;
+      transition: all 0.3s;
+    }
+
+    .role-card:hover {
+      border-color: var(--accent);
+      transform: translateY(-4px);
+      box-shadow: 0 20px 40px rgba(34, 197, 94, 0.15);
+    }
+
+    .role-icon { font-size: 48px; margin-bottom: 16px; }
+
+    .role-title {
+      font-size: 22px;
+      font-weight: 700;
+      margin-bottom: 12px;
+    }
+
+    .role-desc {
+      font-size: 14px;
+      color: var(--muted);
+      line-height: 1.6;
+      margin-bottom: 20px;
+    }
+
+    .role-features {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 8px;
+      margin-bottom: 20px;
+    }
+
+    .role-feature {
+      background: var(--card);
+      padding: 6px 12px;
+      border-radius: 8px;
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 14px 28px;
+      border-radius: 14px;
+      font-size: 15px;
+      font-weight: 600;
+      text-decoration: none;
+      cursor: pointer;
+      border: none;
+      transition: all 0.2s;
+      width: 100%;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #22c55e, #16a34a);
+      color: #022c22;
+      box-shadow: 0 8px 24px rgba(34, 197, 94, 0.4);
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 32px rgba(34, 197, 94, 0.5);
+    }
+
+    .btn-secondary {
+      background: var(--card);
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+
+    .btn-secondary:hover {
+      border-color: var(--accent);
+      background: rgba(34, 197, 94, 0.1);
+    }
+
+    .support {
+      text-align: center;
+      padding: 20px;
+      background: var(--bg);
+      border-radius: 16px;
+      border: 1px solid var(--border);
+    }
+
+    .support-title {
+      font-size: 14px;
+      color: var(--accent);
+      font-weight: 600;
+      margin-bottom: 12px;
+    }
+
+    .support-links {
+      display: flex;
+      justify-content: center;
+      gap: 24px;
+      flex-wrap: wrap;
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    .support-links a {
+      color: var(--text);
+      text-decoration: none;
+    }
+
+    .footer {
+      text-align: center;
+      margin-top: 24px;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .live-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(34, 197, 94, 0.15);
+      border: 1px solid rgba(34, 197, 94, 0.3);
+      padding: 4px 12px;
+      border-radius: 999px;
+      font-size: 11px;
+      color: #4ade80;
+      margin-bottom: 12px;
+    }
+
+    .live-dot {
+      width: 8px;
+      height: 8px;
+      background: #22c55e;
+      border-radius: 50%;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.5; transform: scale(0.8); }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <header class="header">
+      <div>
+        <div class="logo">LOGIXPERTS</div>
+        <div class="logo-sub" id="logoSub">SMART LOAD ANALYZER</div>
+      </div>
+      <div class="lang-toggle">
+        <button class="lang-btn active" id="btnEn" onclick="setLang('en')">EN</button>
+        <button class="lang-btn" id="btnAr" onclick="setLang('ar')">عربي</button>
+      </div>
+    </header>
+
+    <section class="hero">
+      <h1 class="hero-title" id="heroTitle">Smart Load Optimization</h1>
+      <p class="hero-subtitle" id="heroSubtitle">
+        AI-powered shipment optimization to reduce empty trips, boost load factor, and cut CO₂ emissions.
+      </p>
+      <div class="features">
+        <span class="feature-tag"><strong>🤖 AI</strong> Analysis</span>
+        <span class="feature-tag"><strong>📍 GPS</strong> Tracking</span>
+        <span class="feature-tag"><strong>🔔 Real-time</strong> Updates</span>
+        <span class="feature-tag"><strong>💬 Chat</strong> Support</span>
+      </div>
+    </section>
+
+    <section class="role-grid">
+      <!-- Admin Card -->
+      <div class="role-card">
+        <div class="role-icon">🖥️</div>
+        <div class="role-title" id="adminTitle">Admin Dashboard</div>
+        <div class="role-desc" id="adminDesc">
+          Manage fleet operations, run AI optimizations, view KPIs, and assign shipments to drivers.
+        </div>
+        <div class="role-features">
+          <span class="role-feature">📊 KPIs</span>
+          <span class="role-feature">🤖 AI Analysis</span>
+          <span class="role-feature">📄 Reports</span>
+          <span class="role-feature">🚚 Fleet Management</span>
+        </div>
+        <a href="admin.html" class="btn btn-primary" id="btnAdmin">
+          Open Admin Dashboard →
+        </a>
+      </div>
+
+      <!-- Driver Card -->
+      <div class="role-card">
+        <div class="live-badge">
+          <span class="live-dot"></span>
+          <span id="liveBadge">Real-time Connected</span>
+        </div>
+        <div class="role-icon">🚚</div>
+        <div class="role-title" id="driverTitle">Driver Portal</div>
+        <div class="role-desc" id="driverDesc">
+          Receive assignments instantly, view routes on map, track location, and chat with dispatch.
+        </div>
+        <div class="role-features">
+          <span class="role-feature">📍 GPS</span>
+          <span class="role-feature">🔔 Notifications</span>
+          <span class="role-feature">🗺️ Maps</span>
+          <span class="role-feature">💬 Chat</span>
+        </div>
+        <a href="driver.html" class="btn btn-secondary" id="btnDriver">
+          Open Driver Portal →
+        </a>
+      </div>
+    </section>
+
+    <section class="support">
+      <div class="support-title" id="supportTitle">Customer Support</div>
+      <div class="support-links">
+        <span>📞 <a href="tel:+966555555555">+966 55 555 5555</a></span>
+        <span>📧 <a href="mailto:support@logixperts.com">support@logixperts.com</a></span>
+      </div>
+    </section>
+
+    <footer class="footer">
+      Logixperts Smart Load Analyzer · Naqlthon 4
+    </footer>
+  </div>
+
+  <script>
+    const T = {
+      en: {
+        logoSub: "SMART LOAD ANALYZER",
+        heroTitle: "Smart Load Optimization",
+        heroSubtitle: "AI-powered shipment optimization to reduce empty trips, boost load factor, and cut CO₂ emissions.",
+        adminTitle: "Admin Dashboard",
+        adminDesc: "Manage fleet operations, run AI optimizations, view KPIs, and assign shipments to drivers.",
+        btnAdmin: "Open Admin Dashboard →",
+        driverTitle: "Driver Portal",
+        driverDesc: "Receive assignments instantly, view routes on map, track location, and chat with dispatch.",
+        btnDriver: "Open Driver Portal →",
+        supportTitle: "Customer Support",
+        liveBadge: "Real-time Connected"
+      },
+      ar: {
+        logoSub: "نظام التحميل الذكي",
+        heroTitle: "تحسين الشحنات الذكي",
+        heroSubtitle: "تحسين الشحنات بالذكاء الاصطناعي لتقليل الرحلات الفارغة، رفع نسبة التحميل، وخفض انبعاثات الكربون.",
+        adminTitle: "لوحة تحكم الإدارة",
+        adminDesc: "إدارة عمليات الأسطول، تشغيل التحسينات بالذكاء الاصطناعي، عرض المؤشرات، وتعيين الشحنات للسائقين.",
+        btnAdmin: "فتح لوحة الإدارة ←",
+        driverTitle: "بوابة السائق",
+        driverDesc: "استلام المهام فوراً، عرض المسارات على الخريطة، تتبع الموقع، والتواصل مع الإرسال.",
+        btnDriver: "فتح بوابة السائق ←",
+        supportTitle: "خدمة العملاء",
+        liveBadge: "متصل مباشرة"
+      }
+    };
+
+    function setLang(lang) {
+      const t = T[lang];
+      document.documentElement.lang = lang;
+      document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
+      
+      document.getElementById('btnEn').classList.toggle('active', lang === 'en');
+      document.getElementById('btnAr').classList.toggle('active', lang === 'ar');
+
+      for (const key in t) {
+        const el = document.getElementById(key);
+        if (el) el.textContent = t[key];
+      }
+    }
+
+    window.setLang = setLang;
+  </script>
+</body>
+</html>
