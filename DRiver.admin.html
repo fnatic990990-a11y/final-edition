@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="UTF-8" />
+  <title>Logixperts - Driver Portal</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, -apple-system, sans-serif; }
+    :root { --bg: #0f172a; --card: #1e293b; --accent: #22c55e; --text: #f1f5f9; --muted: #94a3b8; --border: #334155; }
+    body { background: var(--bg); color: var(--text); min-height: 100vh; }
+
+    .header {
+      background: linear-gradient(135deg, #1e293b, #0f172a);
+      padding: 12px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--border);
+    }
+    .logo { font-size: 18px; font-weight: 800; color: var(--accent); letter-spacing: 2px; }
+    .header-actions { display: flex; gap: 8px; }
+    .lang-btn { background: var(--card); border: 1px solid var(--border); color: var(--muted); padding: 6px 12px; border-radius: 8px; font-size: 12px; cursor: pointer; }
+    .lang-btn.active { background: var(--accent); color: #0f172a; }
+    .logout-btn { background: #dc2626; border: none; color: white; padding: 6px 12px; border-radius: 8px; font-size: 12px; cursor: pointer; }
+
+    /* Dashboard Layout */
+    .dashboard { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; padding: 16px; max-width: 1200px; margin: 0 auto; }
+    @media (max-width: 800px) { .dashboard { grid-template-columns: 1fr; } }
+
+    .card { background: var(--card); border-radius: 16px; padding: 20px; border: 1px solid var(--border); }
+    .card-title { font-size: 15px; font-weight: 600; margin-bottom: 14px; display: flex; align-items: center; gap: 8px; color: var(--accent); }
+
+    /* Driver Info Card */
+    .driver-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+    .driver-name { font-size: 20px; font-weight: 700; }
+    .driver-id { font-size: 12px; color: var(--muted); }
+    .status-badge { padding: 10px 16px; border-radius: 10px; font-weight: 600; font-size: 13px; text-align: center; }
+    .status-ready { background: #14532d; color: #86efac; }
+    .status-arrived { background: #713f12; color: #fde047; }
+    .status-loaded { background: #1e3a5f; color: #7dd3fc; }
+    .status-transit { background: #581c87; color: #d8b4fe; }
+
+    /* Assignment */
+    .assignment-empty { text-align: center; padding: 20px; color: var(--muted); }
+    .assignment-empty .icon { font-size: 40px; margin-bottom: 8px; }
+    .detail-row { display: flex; justify-content: space-between; padding: 8px 10px; background: var(--bg); border-radius: 8px; margin-bottom: 8px; }
+    .detail-label { color: var(--muted); font-size: 12px; }
+    .detail-value { font-weight: 600; font-size: 13px; }
+    .route-badge { background: var(--accent); color: #0f172a; padding: 10px; border-radius: 8px; text-align: center; font-weight: 600; font-size: 14px; }
+
+    /* Map */
+    #map { height: 180px; border-radius: 10px; margin-bottom: 10px; }
+    .map-legend { display: flex; gap: 16px; font-size: 11px; color: var(--muted); padding: 8px; background: var(--bg); border-radius: 8px; }
+    .legend-item { display: flex; align-items: center; gap: 6px; }
+    .legend-dot { width: 10px; height: 10px; border-radius: 50%; }
+    .dot-you { background: #3b82f6; }
+    .dot-dest { background: #ef4444; }
+
+    /* Actions */
+    .actions-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 12px; }
+    .action-btn {
+      display: flex; flex-direction: column; align-items: center; gap: 4px;
+      padding: 12px 8px; background: var(--bg); border: 1px solid var(--border);
+      border-radius: 10px; color: var(--text); font-size: 11px; cursor: pointer; transition: all 0.2s;
+    }
+    .action-btn:hover:not(:disabled) { border-color: var(--accent); background: #14532d; }
+    .action-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+    .action-btn .icon { font-size: 20px; }
+    .action-btn.active { border-color: var(--accent); background: #14532d; }
+    .chat-btn { width: 100%; padding: 12px; background: var(--accent); color: #0f172a; border: none; border-radius: 10px; font-size: 13px; font-weight: 600; cursor: pointer; }
+
+    /* Location */
+    .location-bar { display: flex; align-items: center; gap: 8px; font-size: 11px; color: var(--muted); margin-top: 8px; }
+    .location-dot { width: 8px; height: 8px; background: #3b82f6; border-radius: 50%; animation: pulse 2s infinite; }
+    @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
+
+    /* Login */
+    .login-container { display: flex; justify-content: center; align-items: center; min-height: calc(100vh - 60px); padding: 20px; }
+    .login-card { width: 100%; max-width: 360px; }
+    .login-title { text-align: center; font-size: 22px; margin-bottom: 6px; }
+    .login-subtitle { text-align: center; color: var(--muted); font-size: 13px; margin-bottom: 20px; }
+    .form-group { margin-bottom: 14px; }
+    .form-label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 4px; }
+    .form-input { width: 100%; padding: 12px; background: var(--bg); border: 1px solid var(--border); border-radius: 10px; color: var(--text); font-size: 14px; }
+    .form-input:focus { outline: none; border-color: var(--accent); }
+    .login-btn { width: 100%; padding: 12px; background: var(--accent); color: #0f172a; border: none; border-radius: 10px; font-size: 15px; font-weight: 600; cursor: pointer; }
+    .login-hint { text-align: center; font-size: 11px; color: var(--muted); margin-top: 12px; }
+    .login-error { text-align: center; font-size: 12px; color: #f87171; margin-top: 10px; }
+    .admin-link { display: block; text-align: center; color: var(--accent); text-decoration: none; font-size: 12px; margin-top: 16px; padding-top: 12px; border-top: 1px solid var(--border); }
+
+    /* Chat Modal */
+    .chat-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 200; }
+    .chat-modal { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 500px; height: 60vh; background: var(--card); border-radius: 20px 20px 0 0; display: flex; flex-direction: column; }
+    .chat-header { padding: 14px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; }
+    .chat-close { background: none; border: none; color: var(--muted); font-size: 24px; cursor: pointer; }
+    .chat-messages { flex: 1; overflow-y: auto; padding: 14px; }
+    .chat-bubble { max-width: 75%; padding: 10px 14px; border-radius: 14px; margin-bottom: 8px; font-size: 13px; }
+    .chat-bubble.me { background: var(--accent); color: #0f172a; margin-left: auto; }
+    .chat-bubble.them { background: var(--bg); }
+    .chat-input-box { padding: 12px; border-top: 1px solid var(--border); display: flex; gap: 8px; }
+    .chat-input { flex: 1; padding: 10px; background: var(--bg); border: 1px solid var(--border); border-radius: 10px; color: var(--text); font-size: 13px; }
+    .chat-send { padding: 10px 16px; background: var(--accent); color: #0f172a; border: none; border-radius: 10px; font-weight: 600; cursor: pointer; }
+
+    /* Alert */
+    .alert { position: fixed; top: 60px; left: 50%; transform: translateX(-50%); background: var(--accent); color: #0f172a; padding: 12px 24px; border-radius: 10px; font-weight: 600; display: none; z-index: 150; }
+
+    .view { display: none; }
+    .view.active { display: block; }
+  </style>
+</head>
+<body>
+  <div class="alert" id="alert">🚚 New Assignment!</div>
+
+  <!-- LOGIN -->
+  <div id="loginView" class="view active">
+    <div class="header">
+      <div class="logo">LOGIXPERTS</div>
+      <div class="header-actions">
+        <button class="lang-btn active" id="btnEn" onclick="setLang('en')">EN</button>
+        <button class="lang-btn" id="btnAr" onclick="setLang('ar')">عربي</button>
+      </div>
+    </div>
+    <div class="login-container">
+      <div class="card login-card">
+        <h1 class="login-title">🚚 Driver Login</h1>
+        <p class="login-subtitle">Enter your ID to continue</p>
+        <div class="form-group">
+          <label class="form-label">Driver ID</label>
+          <input class="form-input" type="text" id="inputId" placeholder="Any ID (e.g. 101)" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Company Code</label>
+          <input class="form-input" type="text" id="inputCode" placeholder="e.g. ABC123" />
+        </div>
+        <button class="login-btn" onclick="login()">Login</button>
+        <p class="login-hint">Enter any Driver ID and your Company Code</p>
+        <p class="login-error" id="loginError"></p>
+        <a href="admin.html" class="admin-link">Admin? Go to Dashboard →</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- DASHBOARD -->
+  <div id="dashboardView" class="view">
+    <div class="header">
+      <div class="logo">LOGIXPERTS</div>
+      <div class="header-actions">
+        <button class="lang-btn active" id="btnEn2" onclick="setLang('en')">EN</button>
+        <button class="lang-btn" id="btnAr2" onclick="setLang('ar')">عربي</button>
+        <button class="logout-btn" onclick="logout()">Logout</button>
+      </div>
+    </div>
+
+    <div class="dashboard">
+      <!-- Left Column -->
+      <div>
+        <!-- Driver Info + Status -->
+        <div class="card" style="margin-bottom: 16px;">
+          <div class="driver-header">
+            <div>
+              <div class="driver-name" id="driverName">Driver</div>
+              <div class="driver-id" id="driverId">ID: -- | Company: --</div>
+            </div>
+          </div>
+          <div class="status-badge status-ready" id="statusBadge">✅ Ready</div>
+        </div>
+
+        <!-- Assignment -->
+        <div class="card">
+          <div class="card-title">📦 Current Assignment</div>
+          <div id="noAssignment" class="assignment-empty">
+            <div class="icon">📭</div>
+            <div>No active assignment</div>
+            <div style="font-size:11px;margin-top:4px;">Waiting for dispatch...</div>
+          </div>
+          <div id="hasAssignment" style="display:none;">
+            <div class="route-badge" id="routeBadge">Riyadh → Jeddah</div>
+            <div style="margin-top: 12px;">
+              <div class="detail-row"><span class="detail-label">Weight</span><span class="detail-value" id="valWeight">--</span></div>
+              <div class="detail-row"><span class="detail-label">Delivery</span><span class="detail-value" id="valTime">--</span></div>
+              <div class="detail-row" id="notesRow" style="display:none;"><span class="detail-label">Notes</span><span class="detail-value" id="valNotes">--</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right Column -->
+      <div>
+        <!-- Map -->
+        <div class="card" style="margin-bottom: 16px;">
+          <div class="card-title">🗺️ Route Map</div>
+          <div id="map"></div>
+          <div class="map-legend">
+            <div class="legend-item"><div class="legend-dot dot-you"></div> Your Location</div>
+            <div class="legend-item"><div class="legend-dot dot-dest"></div> Destination</div>
+          </div>
+          <div class="location-bar">
+            <div class="location-dot"></div>
+            <span id="locationText">Tracking...</span>
+          </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="card">
+          <div class="card-title">⚡ Update Status</div>
+          <div class="actions-grid">
+            <button class="action-btn" id="btnArrived" onclick="setStatus('arrived')"><span class="icon">📍</span>Arrived</button>
+            <button class="action-btn" id="btnLoaded" onclick="setStatus('loaded')"><span class="icon">✅</span>Loaded</button>
+            <button class="action-btn" id="btnTransit" onclick="setStatus('transit')"><span class="icon">🚚</span>Transit</button>
+            <button class="action-btn" id="btnDone" onclick="setStatus('done')"><span class="icon">🏁</span>Done</button>
+          </div>
+          <button class="chat-btn" onclick="openChat()">💬 Chat with Dispatch</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CHAT -->
+  <div class="chat-overlay" id="chatOverlay" onclick="closeChat()">
+    <div class="chat-modal" onclick="event.stopPropagation()">
+      <div class="chat-header">
+        <span>💬 Dispatch Chat</span>
+        <button class="chat-close" onclick="closeChat()">×</button>
+      </div>
+      <div class="chat-messages" id="chatMessages"></div>
+      <div class="chat-input-box">
+        <input class="chat-input" id="chatInput" placeholder="Type message..." />
+        <button class="chat-send" onclick="sendMsg()">Send</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
+    import { getFirestore, doc, setDoc, onSnapshot, collection, addDoc, query, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
+
+    const app = initializeApp({
+      apiKey: "AIzaSyAjbvQo7NrGZiFbFbdY3a7UtDjlv0SwU3w",
+      authDomain: "smart-load-analyzer-56cb2.firebaseapp.com",
+      projectId: "smart-load-analyzer-56cb2"
+    });
+    const db = getFirestore(app);
+
+    const CITIES = { 'Riyadh': [24.7136, 46.6753], 'Jeddah': [21.4858, 39.1925], 'Dammam': [26.4207, 50.0888] };
+
+    let lang = 'en', driver = null, status = 'ready', assignment = null, map = null, myMarker = null, destMarker = null, routeLine = null, unsub = null, unsubChat = null;
+
+    window.setLang = (l) => {
+      lang = l;
+      document.documentElement.dir = l === 'ar' ? 'rtl' : 'ltr';
+      ['btnEn', 'btnEn2'].forEach(id => document.getElementById(id)?.classList.toggle('active', l === 'en'));
+      ['btnAr', 'btnAr2'].forEach(id => document.getElementById(id)?.classList.toggle('active', l === 'ar'));
+    };
+
+    window.login = async () => {
+      const id = document.getElementById('inputId').value.trim();
+      const code = document.getElementById('inputCode').value.trim().toUpperCase();
+      if (!id || !code) { document.getElementById('loginError').textContent = 'Please fill all fields'; return; }
+      
+      driver = { id: `${code}_driver${id}`, num: id, code };
+      localStorage.setItem('driver', JSON.stringify(driver));
+      
+      try {
+        await setDoc(doc(db, 'drivers', driver.id), { driverId: id, companyCode: code, name: `Driver ${id}`, status: 'ready', lastLogin: serverTimestamp() }, { merge: true });
+        startSync();
+      } catch (e) { console.log('Offline'); }
+      
+      showDashboard();
+    };
+
+    window.logout = () => {
+      unsub?.(); unsubChat?.();
+      driver = null; assignment = null;
+      localStorage.removeItem('driver');
+      document.getElementById('dashboardView').classList.remove('active');
+      document.getElementById('loginView').classList.add('active');
+    };
+
+    function showDashboard() {
+      document.getElementById('loginView').classList.remove('active');
+      document.getElementById('dashboardView').classList.add('active');
+      document.getElementById('driverName').textContent = `Driver ${driver.num}`;
+      document.getElementById('driverId').textContent = `ID: ${driver.num} | Company: ${driver.code}`;
+      initMap(); trackLocation();
+    }
+
+    function startSync() {
+      if (!driver) return;
+      unsub = onSnapshot(doc(db, 'drivers', driver.id), (snap) => {
+        if (snap.exists()) {
+          const d = snap.data();
+          if (d.currentAssignment) {
+            if (assignment?.destination !== d.currentAssignment.destination) showAlert();
+            assignment = d.currentAssignment;
+            showAssignment(assignment);
+          } else { assignment = null; hideAssignment(); }
+          if (d.status) { status = d.status; updateStatusBadge(); }
+        }
+      });
+      
+      unsubChat = onSnapshot(query(collection(db, 'drivers', driver.id, 'chat'), orderBy('timestamp', 'asc')), (snap) => {
+        const msgs = []; snap.forEach(d => msgs.push({ ...d.data() }));
+        document.getElementById('chatMessages').innerHTML = msgs.map(m => `<div class="chat-bubble ${m.sender === 'driver' ? 'me' : 'them'}">${m.text}</div>`).join('');
+      });
+    }
+
+    function showAssignment(a) {
+      document.getElementById('noAssignment').style.display = 'none';
+      document.getElementById('hasAssignment').style.display = 'block';
+      document.getElementById('routeBadge').textContent = `${a.origin || 'Origin'} → ${a.destination || 'Destination'}`;
+      document.getElementById('valWeight').textContent = (a.weight || '--') + ' tons';
+      document.getElementById('valTime').textContent = a.deliveryTime || '--';
+      if (a.notes) { document.getElementById('notesRow').style.display = 'flex'; document.getElementById('valNotes').textContent = a.notes; }
+      updateMapRoute(a);
+    }
+
+    function hideAssignment() {
+      document.getElementById('noAssignment').style.display = 'block';
+      document.getElementById('hasAssignment').style.display = 'none';
+      if (destMarker) { map.removeLayer(destMarker); destMarker = null; }
+      if (routeLine) { map.removeLayer(routeLine); routeLine = null; }
+    }
+
+    window.setStatus = async (s) => {
+      status = s; updateStatusBadge();
+      if (driver) { try { await setDoc(doc(db, 'drivers', driver.id), { status: s, statusUpdatedAt: serverTimestamp() }, { merge: true }); } catch (e) {} }
+    };
+
+    function updateStatusBadge() {
+      const b = document.getElementById('statusBadge');
+      const labels = { ready: '✅ Ready', arrived: '📍 Arrived', loaded: '📦 Loaded', transit: '🚚 In Transit', done: '🏁 Delivered' };
+      b.className = 'status-badge status-' + (status === 'done' ? 'ready' : status);
+      b.textContent = labels[status] || labels.ready;
+      
+      // Update button states
+      document.getElementById('btnArrived').disabled = status !== 'ready';
+      document.getElementById('btnLoaded').disabled = status !== 'arrived';
+      document.getElementById('btnTransit').disabled = status !== 'loaded';
+      document.getElementById('btnDone').disabled = status !== 'transit';
+      
+      // Highlight active
+      ['btnArrived', 'btnLoaded', 'btnTransit', 'btnDone'].forEach(id => document.getElementById(id).classList.remove('active'));
+      if (status === 'arrived') document.getElementById('btnArrived').classList.add('active');
+      if (status === 'loaded') document.getElementById('btnLoaded').classList.add('active');
+      if (status === 'transit') document.getElementById('btnTransit').classList.add('active');
+      if (status === 'done') document.getElementById('btnDone').classList.add('active');
+    }
+
+    function showAlert() {
+      const a = document.getElementById('alert');
+      a.style.display = 'block';
+      setTimeout(() => a.style.display = 'none', 4000);
+    }
+
+    function initMap() {
+      if (map) return;
+      map = L.map('map').setView([24.7, 44], 5);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+      setTimeout(() => map.invalidateSize(), 300);
+    }
+
+    function updateMapRoute(a) {
+      if (!map) return;
+      
+      // Clear old markers
+      if (destMarker) map.removeLayer(destMarker);
+      if (routeLine) map.removeLayer(routeLine);
+      
+      const dest = CITIES[a.destination];
+      const origin = CITIES[a.origin];
+      
+      if (dest) {
+        // Red marker for destination
+        destMarker = L.circleMarker(dest, { radius: 10, fillColor: '#ef4444', color: '#fff', weight: 2, fillOpacity: 1 }).addTo(map);
+        destMarker.bindTooltip(a.destination, { permanent: true, direction: 'top' });
+      }
+      
+      if (dest && origin) {
+        routeLine = L.polyline([origin, dest], { color: '#22c55e', weight: 3, dashArray: '8,8' }).addTo(map);
+        map.fitBounds([origin, dest], { padding: [40, 40] });
+      } else if (dest) {
+        map.setView(dest, 8);
+      }
+    }
+
+    function trackLocation() {
+      navigator.geolocation?.watchPosition(
+        p => {
+          const lat = p.coords.latitude, lng = p.coords.longitude;
+          document.getElementById('locationText').textContent = `📍 ${lat.toFixed(4)}, ${lng.toFixed(4)}`;
+          
+          // Update my marker (blue)
+          if (map) {
+            if (myMarker) map.removeLayer(myMarker);
+            myMarker = L.circleMarker([lat, lng], { radius: 8, fillColor: '#3b82f6', color: '#fff', weight: 2, fillOpacity: 1 }).addTo(map);
+          }
+          
+          // Send to Firebase
+          if (driver) setDoc(doc(db, 'drivers', driver.id), { currentLocation: { latitude: lat, longitude: lng }, locationUpdatedAt: serverTimestamp() }, { merge: true }).catch(() => {});
+        },
+        () => document.getElementById('locationText').textContent = 'Location unavailable',
+        { enableHighAccuracy: true, maximumAge: 10000 }
+      );
+    }
+
+    window.openChat = () => document.getElementById('chatOverlay').style.display = 'block';
+    window.closeChat = () => document.getElementById('chatOverlay').style.display = 'none';
+    window.sendMsg = async () => {
+      const i = document.getElementById('chatInput'), t = i.value.trim();
+      if (!t || !driver) return; i.value = '';
+      try { await addDoc(collection(db, 'drivers', driver.id, 'chat'), { text: t, sender: 'driver', timestamp: serverTimestamp() }); } catch (e) {}
+    };
+
+    document.getElementById('chatInput').addEventListener('keypress', e => { if (e.key === 'Enter') window.sendMsg(); });
+
+    // Check saved session
+    const saved = localStorage.getItem('driver');
+    if (saved) { try { driver = JSON.parse(saved); showDashboard(); startSync(); } catch (e) { localStorage.removeItem('driver'); } }
+    
+    window.setLang('en');
+  </script>
+</body>
+</html>
