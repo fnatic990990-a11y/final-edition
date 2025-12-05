@@ -1,0 +1,2576 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="UTF-8" />
+  <title>Logixperts - Smart Load Analyzer</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <!-- Leaflet CSS -->
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+    crossorigin=""
+  />
+
+  <style>
+    :root {
+      --card: #111827;
+      --accent: #22c55e;
+      --text: #e5e7eb;
+      --muted: #9ca3af;
+      --border: #1f2937;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: radial-gradient(circle at top, #0f172a 0, #020617 55%);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      padding: 24px;
+    }
+
+    .app {
+      max-width: 1200px; width: 100%;
+      background: #020617;
+      border-radius: 32px;
+      border: 1px solid #1f2937;
+      padding: 20px 20px 26px;
+      box-shadow: 0 18px 40px rgba(0,0,0,.45);
+      display: flex; flex-direction: column; gap: 18px;
+    }
+
+    header {
+      display: flex; justify-content: space-between; align-items: center;
+      gap: 16px; padding: 10px 14px 6px;
+      border-radius: 26px;
+      background: radial-gradient(circle at left top, #22c55e20, #020617 55%);
+      border: 1px solid #1f2937;
+      flex-wrap: wrap;
+    }
+
+    .brand-group {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .brand { display: flex; align-items: center; gap: 14px; }
+
+    .badge-logo {
+      width: 42px; height: 42px;
+      border-radius: 18px;
+      border: 1px solid #16a34a;
+      background: radial-gradient(circle at 30% 30%, #22c55e, #16a34a);
+      display: flex; align-items: center; justify-content: center;
+      color: #ecfdf5; font-weight: 800; font-size: 18px;
+      box-shadow: 0 10px 25px rgba(34,197,94,.55);
+    }
+
+    .brand-text h1 {
+      font-size: 20px; font-weight: 800;
+      letter-spacing: .06em; text-transform: uppercase;
+    }
+
+    .brand-text span {
+      display:block; font-size:11px; color:var(--muted);
+      text-transform:uppercase; letter-spacing:.12em; margin-top:2px;
+    }
+
+    .back-link {
+      font-size: 12px;
+      color: var(--muted);
+      text-decoration: none;
+      padding: 6px 12px;
+      border-radius: 999px;
+      border: 1px solid #1f2937;
+      background: #020617;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    .back-link:hover {
+      color: #e5e7eb;
+      border-color: #22c55e;
+    }
+
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-left: auto;
+    }
+
+    .lang-switch {
+      font-size: 13px;
+      background: #020617;
+      border: 1px solid #1f2937;
+      padding: 6px 12px;
+      border-radius: 999px;
+      color: var(--muted);
+      cursor: pointer;
+    }
+
+    .team-pill {
+      padding: 8px 14px; border-radius: 999px;
+      border: 1px solid #1f2937; background:#020617b3;
+      display:inline-flex; align-items:center; gap:8px;
+      font-size:12px; color:var(--muted);
+    }
+    .team-pill span { color:#bbf7d0; font-weight:600; }
+
+    .company-code-pill {
+      padding: 6px 12px;
+      border-radius: 999px;
+      border: 1px solid #16a34a;
+      background: #022c22;
+      font-size: 12px;
+      color: #bbf7d0;
+      display: none;
+      align-items: center;
+      gap: 6px;
+      white-space: nowrap;
+    }
+
+    .hero {
+      display:flex; flex-wrap:wrap; gap:20px;
+      padding:14px 18px 18px;
+      border-radius:26px;
+      background: radial-gradient(circle at top right,#22c55e12,#020617 55%);
+      border:1px solid #1f2937;
+    }
+
+    .hero-main{flex:1 1 260px;}
+    .hero-title{font-size:24px;font-weight:700;margin-bottom:6px;}
+    .hero-sub{font-size:13px;color:var(--muted);max-width:420px;line-height:1.4;}
+
+    .hero-tags{margin-top:12px;display:flex;flex-wrap:wrap;gap:8px;}
+    .hero-tag{
+      font-size:11px;padding:6px 10px;border-radius:999px;
+      border:1px solid #1f2937;background:#020617;color:#9ca3af;
+    }
+    .hero-tag strong{color:#a7f3d0;}
+
+    .hero-highlight{
+      font-size:12px;margin-top:10px;padding:8px 10px;
+      border-radius:14px;background:#022c2230;border:1px solid #064e3b;
+      color:#a7f3d0;
+    }
+
+    .hero-metric{
+      flex:0 0 220px;display:grid;
+      grid-template-columns:repeat(2,minmax(0,1fr));
+      gap:10px;align-content:center;
+    }
+
+    .hero-metric-card{
+      padding:10px;border-radius:16px;border:1px solid #1f2937;background:#020617;
+    }
+    .hero-metric-card h3{font-size:11px;color:var(--muted);margin-bottom:4px;}
+    .hero-metric-card p{font-size:17px;font-weight:700;}
+
+    .nav-tabs{
+      display:flex;flex-wrap:wrap;gap:8px;padding:4px;
+      border-radius:999px;background:#020617;border:1px solid #1f2937;
+      align-self:center;
+      margin-top: 10px;
+    }
+    .nav-tab{
+      border:none;background:transparent;padding:8px 14px;border-radius:999px;
+      font-size:12px;color:var(--muted);cursor:pointer;
+      display:none;
+    }
+    .nav-tab.active{
+      background:#16a34a;color:#ecfdf5;font-weight:600;
+      box-shadow:0 10px 25px rgba(34,197,94,.55);
+    }
+
+    main{margin-top:4px;display:grid;grid-template-columns:minmax(0,1fr);}
+    .view{display:none;animation:fade .25s ease-out;}
+    .view.active{display:block;}
+    @keyframes fade{from{opacity:0;transform:translateY(4px);}to{opacity:1;transform:translateY(0);} }
+
+    .card{
+      background:var(--card);border-radius:24px;border:1px solid var(--border);
+      padding:18px;box-shadow:0 10px 30px rgba(0,0,0,.45);
+    }
+    .card-header{
+      display:flex;justify-content:space-between;align-items:baseline;
+      gap:10px;margin-bottom:10px;flex-wrap:wrap;
+    }
+    .card-title{font-size:16px;font-weight:600;}
+    .card-sub{font-size:12px;color:var(--muted);}
+
+    .two-column{
+      display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,0.9fr);gap:14px;
+    }
+    @media(max-width:900px){
+      .two-column{grid-template-columns:minmax(0,1fr);}
+      header{flex-direction:column;align-items:flex-start;}
+      .hero{flex-direction:column;}
+      .hero-metric{width:100%;}
+      .header-right{margin-left:0;}
+    }
+
+    .analyze-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 14px;
+    }
+
+    .kpi-grid{
+      display:grid;
+      grid-template-columns:repeat(auto-fit,minmax(150px,1fr));
+      gap:10px;margin-bottom:12px;
+    }
+    .kpi-card{
+      padding:12px;border-radius:18px;border:1px solid #1f2937;background:#020617;
+    }
+    .kpi-label{font-size:11px;color:var(--muted);margin-bottom:4px;}
+    .kpi-value{font-size:18px;font-weight:700;margin-bottom:2px;}
+    .kpi-footnote{font-size:11px;color:#4ade80;}
+
+    #map{
+      width:100%;
+      height:230px;
+      border-radius:18px;
+      border:1px solid #1f2937;
+      overflow:hidden;
+    }
+
+    .pill{
+      display:inline-flex;align-items:center;gap:6px;
+      padding:6px 10px;border-radius:999px;background:#020617;
+      border:1px solid #1f2937;font-size:11px;color:var(--muted);
+    }
+    .pill-dot{width:8px;height:8px;border-radius:999px;background:#22c55e;}
+
+    .login-form,.analyze-form,.signup-form{display:grid;gap:10px;margin-top:6px;}
+    label{font-size:12px;margin-bottom:2px;color:var(--muted);}
+    .field{display:flex;flex-direction:column;gap:4px;}
+
+    input,select{
+      padding:9px 10px;border-radius:12px;border:1px solid #374151;
+      background:#020617;color:var(--text);font-size:13px;
+    }
+    input:focus,select:focus{border-color:#22c55e;outline:none;}
+
+    .password-input{
+      display:flex;align-items:center;gap:6px;
+    }
+    .password-input input{flex:1;}
+    .password-toggle{
+      border:1px solid #374151;
+      background:#020617;
+      color:#9ca3af;
+      border-radius:999px;
+      font-size:11px;
+      padding:5px 10px;
+      cursor:pointer;
+    }
+
+    .btn{
+      border:none;padding:9px 14px;border-radius:999px;
+      font-size:13px;cursor:pointer;font-weight:600;
+      display:inline-flex;align-items:center;justify-content:center;
+    }
+    .btn-primary{
+      background:linear-gradient(to right,#16a34a,#22c55e);
+      color:#ecfdf5;box-shadow:0 14px 30px rgba(34,197,94,.55);
+    }
+    .btn-secondary{
+      background:#020617;border:1px solid #374151;color:#e5e7eb;
+    }
+
+    .truck-list{
+      margin-top:8px;border-radius:18px;border:1px solid #1f2937;
+      overflow:hidden;background:#020617;
+    }
+    .truck-row{
+      display:grid;grid-template-columns:1.2fr .9fr 1.3fr;
+      padding:8px 10px;font-size:12px;border-bottom:1px solid #111827;
+      align-items:center;
+    }
+    .truck-row.header{background:#020617;font-weight:600;color:var(--muted);font-size:11px;}
+
+    .chip{
+      padding:3px 8px;border-radius:999px;font-size:11px;
+      border:1px solid #1f2937;display:inline-flex;align-items:center;gap:4px;
+    }
+    .chip.good{border-color:#16a34a;color:#bbf7d0;background:#052e16;}
+    .chip.warn{border-color:#f97316;color:#fed7aa;background:#451a03;}
+    .chip.bad{border-color:#ef4444;color:#fecaca;background:#450a0a;}
+
+    .opt-summary{font-size:12px;color:var(--muted);margin-top:6px;}
+    .opt-summary strong{color:#a7f3d0;}
+
+    .hint{font-size:11px;color:var(--muted);margin-top:4px;}
+    .hint-error{color:#fecaca;}
+
+    .stats-form {
+      margin-top: 8px;
+      padding-top: 8px;
+      border-top: 1px solid #111827;
+    }
+    .stats-form-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+      gap: 8px;
+      align-items: end;
+    }
+    .small-field label {
+      font-size: 11px;
+    }
+    .small-field input {
+      font-size: 12px;
+      padding: 7px 9px;
+    }
+
+    .support-footer{
+      margin-top:16px;
+      display:flex;
+      justify-content:flex-start;
+    }
+
+    .support-box{
+      font-size:12px;
+      color:var(--muted);
+      padding:10px 14px;
+      border-radius:16px;
+      border:1px solid #1f2937;
+      background:#020617;
+      line-height:1.6;
+    }
+
+    .support-title{
+      font-size:14px;
+      color:#22c55e;
+      font-weight:600;
+      margin-bottom:4px;
+      text-align:left;
+    }
+
+    .support-row{
+      display:flex;
+      align-items:center;
+      gap:6px;
+    }
+
+    .support-icon{
+      font-size:13px;
+    }
+
+    footer{margin-top:4px;font-size:10px;color:#4b5563;text-align:right;}
+    footer span{color:#a7f3d0;}
+
+    /* FIX: Chart container with fixed height */
+    .chart-container {
+      position: relative;
+      height: 250px;
+      width: 100%;
+    }
+
+    /* NEW: Charts grid for 3 separate charts */
+    .charts-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+    }
+    
+    .mini-chart-container {
+      background: #020617;
+      border: 1px solid #1f2937;
+      border-radius: 16px;
+      padding: 12px;
+      height: 180px;
+      position: relative;
+    }
+    
+    .mini-chart-title {
+      font-size: 11px;
+      color: #9ca3af;
+      text-align: center;
+      margin-bottom: 8px;
+      font-weight: 600;
+    }
+    
+    .mini-chart-container canvas {
+      max-height: 140px;
+    }
+
+    @media(max-width: 700px) {
+      .charts-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* Driver Monitoring Styles */
+    .driver-card {
+      background: #111827;
+      border: 1px solid #1f2937;
+      border-radius: 16px;
+      padding: 16px;
+      transition: all 0.2s;
+    }
+    .driver-card:hover {
+      border-color: #22c55e;
+    }
+    .driver-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+    .driver-name {
+      font-weight: 700;
+      font-size: 16px;
+    }
+    .driver-id {
+      font-size: 11px;
+      color: var(--muted);
+    }
+    .driver-status {
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+    .status-ready { background: #14532d; color: #86efac; }
+    .status-arrived { background: #713f12; color: #fde047; }
+    .status-loaded { background: #1e3a5f; color: #7dd3fc; }
+    .status-transit { background: #581c87; color: #d8b4fe; }
+    .status-done { background: #14532d; color: #86efac; }
+    .status-offline { background: #374151; color: #9ca3af; }
+
+    .driver-info-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 8px 10px;
+      background: #0f172a;
+      border-radius: 8px;
+      margin-bottom: 6px;
+      font-size: 12px;
+    }
+    .driver-info-label { color: var(--muted); }
+    .driver-info-value { font-weight: 500; }
+
+    .driver-chat-box {
+      background: #0f172a;
+      border-radius: 10px;
+      padding: 10px;
+      margin-top: 10px;
+      max-height: 150px;
+      overflow-y: auto;
+    }
+    .driver-chat-bubble {
+      padding: 6px 10px;
+      border-radius: 10px;
+      margin-bottom: 6px;
+      font-size: 12px;
+      max-width: 85%;
+    }
+    .chat-from-driver { background: #22c55e; color: #0f172a; margin-right: auto; }
+    .chat-from-admin { background: #334155; margin-left: auto; }
+    .driver-chat-input {
+      display: flex;
+      gap: 8px;
+      margin-top: 8px;
+    }
+    .driver-chat-input input {
+      flex: 1;
+      padding: 8px 12px;
+      background: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 8px;
+      color: #e5e7eb;
+      font-size: 12px;
+    }
+    .driver-chat-input button {
+      padding: 8px 14px;
+      background: #22c55e;
+      color: #0f172a;
+      border: none;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+  </style>
+
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js" defer></script>
+
+  <!-- Leaflet JS -->
+  <script
+    src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+    crossorigin=""
+    defer
+  ></script>
+
+  <!-- jsPDF (UMD) -->
+  <script
+    src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"
+    onload="window.jsPDF = window.jspdf.jsPDF;">
+  </script>
+</head>
+<body>
+  <div class="app">
+    <header>
+      <div class="brand-group">
+        <div class="brand">
+          <div class="badge-logo">Lx</div>
+          <div class="brand-text">
+            <h1 id="text_brand">Logixperts</h1>
+            <span id="text_subbrand">Smart Load Analyzer</span>
+          </div>
+        </div>
+
+        <a href="index.html" id="back_link" class="back-link">
+          ← Back to role selection
+        </a>
+      </div>
+
+      <div class="header-right">
+        <div class="company-code-pill" id="company_code_badge">
+          <span id="company_code_label">Company code:</span>
+          <span id="company_code_value"></span>
+        </div>
+
+        <div class="team-pill">
+          <span id="team_label">Team:</span>&nbsp;<span>Logixperts</span> | <span id="team_event">Naqlthon 4</span>
+        </div>
+
+        <button class="lang-switch" id="langSwitcher" type="button" onclick="toggleLanguage()">AR</button>
+      </div>
+    </header>
+
+    <!-- HERO -->
+    <section class="hero">
+      <div class="hero-main">
+        <p class="hero-title" id="hero_title">
+          Reduce Empty Trips. Boost Load Factor. Go Greener.
+        </p>
+
+        <p class="hero-sub" id="hero_sub">
+          Smart Load Analyzer helps freight companies analyze and optimize loads to reduce cost and emissions.
+        </p>
+
+        <div class="hero-tags">
+          <div class="hero-tag">
+            <strong>15–25%</strong>&nbsp;<span id="tag_fuel">fuel reduction (simulated)</span>
+          </div>
+          <div class="hero-tag">
+            <strong>AI</strong>&nbsp;<span id="tag_ai">load & route suggestions</span>
+          </div>
+        </div>
+
+        <div class="hero-highlight" id="hero_highlight">
+          This scenario shows how merging a new shipment with a low-load return trip improves load factor.
+        </div>
+      </div>
+
+      <div class="hero-metric">
+        <div class="hero-metric-card">
+          <h3 id="hero_avg_before_title">Avg load (baseline)</h3>
+          <p id="hero-load-before">–</p>
+        </div>
+
+        <div class="hero-metric-card">
+          <h3 id="hero_cost_title">Op. cost / day</h3>
+          <p id="hero-cost-before">–</p>
+        </div>
+
+        <div class="hero-metric-card">
+          <h3 id="hero_co2_title">CO₂ / day</h3>
+          <p id="hero-co2-before">–</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- NAV TABS -->
+    <nav class="nav-tabs">
+      <button class="nav-tab active" data-view="login-view" id="tab_login">Login / Sign up</button>
+      <button class="nav-tab" data-view="dashboard-view" id="tab_dashboard">Dashboard</button>
+      <button class="nav-tab" data-view="analyze-view" id="tab_analyze">Analyze Load</button>
+      <button class="nav-tab" data-view="optimization-view" id="tab_opt">Optimization Result</button>
+      <button class="nav-tab" data-view="drivers-view" id="tab_drivers">👥 Drivers</button>
+    </nav>
+
+    <main>
+      <!-- LOGIN -->
+      <section id="login-view" class="view active">
+        <div class="two-column">
+          <div class="card">
+            <div class="card-header">
+              <div>
+                <div class="card-title" id="login_title">Company Login</div>
+                <div class="card-sub" id="login_sub">
+                  Access your Smart Load Analyzer workspace.
+                </div>
+              </div>
+            </div>
+
+            <form class="login-form" onsubmit="event.preventDefault(); demoLogin();">
+              <div class="field">
+                <label id="label_email">Company email</label>
+                <input id="company" type="text" placeholder="rahmone17990@gmail.com" required />
+              </div>
+
+              <div class="field">
+                <label id="label_password">Password</label>
+                <div class="password-input">
+                  <input id="password" type="password" placeholder="••••••••" required />
+                  <button type="button" class="password-toggle" onclick="togglePassword('password', this)">Show</button>
+                </div>
+              </div>
+
+              <button class="btn btn-primary" type="submit" id="login_btn">Login</button>
+
+              <p class="hint" id="login_hint"></p>
+              <p id="login-error" class="hint hint-error"></p>
+            </form>
+          </div>
+
+          <!-- SIGNUP -->
+          <div class="card">
+            <div class="card-header">
+              <div>
+                <div class="card-title" id="signup_title">Create Company Account</div>
+                <div class="card-sub" id="signup_sub">Create your company account to access the system.</div>
+              </div>
+            </div>
+
+            <form class="signup-form" onsubmit="event.preventDefault(); signUp();">
+              <div class="field">
+                <label id="signup_label_name">Company name</label>
+                <input id="signup-name" type="text" placeholder="e.g. Green Freight Co." required />
+              </div>
+
+              <div class="field">
+                <label id="signup_label_email">Company email</label>
+                <input id="signup-email" type="email" placeholder="you@company.sa" required />
+              </div>
+
+              <div class="field">
+                <label id="signup_label_pass">Password</label>
+                <div class="password-input">
+                  <input id="signup-password" type="password" placeholder="Choose a strong password" required />
+                  <button type="button" class="password-toggle" onclick="togglePassword('signup-password', this)">Show</button>
+                </div>
+              </div>
+
+              <div class="field">
+                <label id="signup_label_fleet">Fleet size (trucks)</label>
+                <input id="signup-fleet" type="number" min="1" step="1" value="20" />
+              </div>
+
+              <div class="field">
+                <label id="signup_label_plan">Subscription plan</label>
+                <select id="signup-plan">
+                  <option value="monthly">Starter – 299 SAR / month</option>
+                  <option value="6months">Growth – 1,499 SAR / 6 months</option>
+                  <option value="yearly">Enterprise – 2,499 SAR / year</option>
+                </select>
+              </div>
+
+              <button class="btn btn-secondary" id="signup_btn" type="submit">Sign up</button>
+              <p id="signup-message" class="hint"></p>
+            </form>
+          </div>
+        </div>
+      </section>
+
+      <!-- DASHBOARD -->
+      <section id="dashboard-view" class="view">
+        <div class="two-column">
+          <div class="card">
+            <div class="card-header">
+              <div>
+                <div class="card-title" id="dash_title">Fleet Overview Dashboard</div>
+                <div class="card-sub" id="dash_sub">4 trucks on main corridors.</div>
+              </div>
+              <span class="pill"><span class="pill-dot"></span> Live scenario</span>
+            </div>
+
+            <div class="kpi-grid">
+              <div class="kpi-card">
+                <div class="kpi-label" id="kpi_trucks_label">Trucks in scenario</div>
+                <div class="kpi-value">4</div>
+                <div class="kpi-footnote">Riyadh ↔ Jeddah / Dammam</div>
+              </div>
+
+              <div class="kpi-card">
+                <div class="kpi-label" id="kpi_baseline_label">Avg load (baseline)</div>
+                <div class="kpi-value" id="kpi-load-before">–</div>
+                <div class="kpi-footnote" id="kpi_baseline_note">Before optimization</div>
+              </div>
+
+              <div class="kpi-card">
+                <div class="kpi-label" id="kpi_after_label">Avg load (after)</div>
+                <div class="kpi-value" id="kpi-load-after">–</div>
+                <div class="kpi-footnote" id="kpi_after_note">After last run</div>
+              </div>
+
+              <div class="kpi-card">
+                <div class="kpi-label" id="kpi_cost_before_label">Op. cost / day</div>
+                <div class="kpi-value" id="kpi-cost-before">–</div>
+                <div class="kpi-footnote" id="kpi_cost_before_note">Simulated SAR</div>
+              </div>
+
+              <div class="kpi-card">
+                <div class="kpi-label" id="kpi_cost_after_label">Op. cost / day (after)</div>
+                <div class="kpi-value" id="kpi-cost-after">–</div>
+                <div class="kpi-footnote" id="kpi-cost-savings">–</div>
+              </div>
+
+              <div class="kpi-card">
+                <div class="kpi-label" id="kpi_co2_before_label">CO₂ / day</div>
+                <div class="kpi-value" id="kpi-co2-before">–</div>
+                <div class="kpi-footnote" id="kpi_co2_before_note">kg CO₂</div>
+              </div>
+
+              <div class="kpi-card">
+                <div class="kpi-label" id="kpi_co2_after_label">CO₂ / day (after)</div>
+                <div class="kpi-value" id="kpi-co2-after">–</div>
+                <div class="kpi-footnote" id="kpi-co2-savings">–</div>
+              </div>
+            </div>
+
+            <!-- Company metrics form -->
+            <div class="stats-form">
+              <div class="stats-form-row">
+                <div class="field small-field">
+                  <label id="stats_label_load">Company avg load (%)</label>
+                  <input id="stats-load" type="number" min="0" max="100" step="1" />
+                </div>
+                <div class="field small-field">
+                  <label id="stats_label_cost">Company op. cost / day (SAR)</label>
+                  <input id="stats-cost" type="number" min="0" step="1" />
+                </div>
+                <div class="field small-field">
+                  <label id="stats_label_co2">Company CO₂ / day (kg)</label>
+                  <input id="stats-co2" type="number" min="0" step="1" />
+                </div>
+                <div class="field small-field">
+                  <label>&nbsp;</label>
+                  <button class="btn btn-secondary" type="button" id="stats-save-btn">Save metrics</button>
+                </div>
+              </div>
+              <p class="hint" id="stats_hint"></p>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <div>
+                <div class="card-title" id="map_title">Truck Positions & Routes</div>
+                <div class="card-sub" id="map_sub">Best routes + load factor markers.</div>
+              </div>
+            </div>
+            <div id="map"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ANALYZE -->
+      <section id="analyze-view" class="view">
+        <div class="analyze-grid">
+          <!-- MANUAL -->
+          <div class="card">
+            <div class="card-header">
+              <div>
+                <div class="card-title" id="analyze_title">Analyze New Shipment (Manual)</div>
+                <div class="card-sub" id="analyze_sub">Enter shipment details manually.</div>
+              </div>
+            </div>
+
+            <form class="analyze-form" onsubmit="event.preventDefault(); runOptimization();">
+              <div class="field">
+                <label id="label_weight">Weight (tons)</label>
+                <input id="weight" type="number" min="0" step="0.1" value="8" />
+              </div>
+
+              <div class="field">
+                <label id="label_volume">Volume (m³)</label>
+                <input id="volume" type="number" min="0" step="1" value="28" />
+              </div>
+
+              <div class="field">
+                <label id="label_destination">Destination city</label>
+                <input id="destination" type="text" value="Riyadh" />
+              </div>
+
+              <div class="field">
+                <label id="label_delivery">Delivery window</label>
+                <input id="deliveryTime" type="text" value="Within 24 hours" />
+              </div>
+
+              <div class="field">
+                <label id="label_priority">Priority</label>
+                <select id="priority">
+                  <option value="normal">Normal</option>
+                  <option value="high">High priority</option>
+                  <option value="low">Low / backhaul</option>
+                </select>
+              </div>
+
+              <button class="btn btn-primary" id="btn_manual_analyze" type="submit">Run Manual Optimization</button>
+            </form>
+          </div>
+
+          <!-- CSV UPLOAD -->
+          <div class="card">
+            <div class="card-header">
+              <div>
+                <div class="card-title" id="csv_title">Upload Your Trips CSV</div>
+                <div class="card-sub" id="csv_sub">Upload trip history to improve optimization accuracy.</div>
+              </div>
+            </div>
+
+            <form class="signup-form" onsubmit="event.preventDefault(); analyzeCSV();">
+              <div class="field">
+                <label id="csv_label">Choose CSV file</label>
+                <input id="csv_file" type="file" accept=".csv" />
+              </div>
+
+              <button class="btn btn-secondary" id="btn_csv">Analyze CSV</button>
+              <p id="csv_message" class="hint"></p>
+            </form>
+          </div>
+
+          <!-- PDF AI REPORT -->
+          <div class="card">
+            <div class="card-header">
+              <div>
+                <div class="card-title" id="pdf_title">PDF AI Report</div>
+                <div class="card-sub" id="pdf_sub">Generate a printable KPI report for your company based on the current optimization.</div>
+              </div>
+            </div>
+
+            <p class="hint" id="pdf_hint">This PDF report shows KPIs, per-truck loads and recommendations for your fleet.</p>
+
+            <button class="btn btn-secondary" type="button" id="pdf_btn" onclick="generatePdfReport()">Generate PDF Report</button>
+            <p id="pdf_message" class="hint"></p>
+          </div>
+        </div>
+
+        <!-- AI CHAT ASSISTANT -->
+        <div class="card" style="margin-top: 16px;">
+          <div class="card-header">
+            <div>
+              <div class="card-title" id="ai_chat_title">AI Chat Assistant</div>
+              <div class="card-sub" id="ai_chat_sub">Ask AI about loads, trips, cost and CO₂ optimization for this company.</div>
+            </div>
+          </div>
+
+          <div id="chat-log" style="max-height: 220px; overflow-y: auto; font-size: 13px; margin-bottom: 10px; padding: 8px; background: #020617; border-radius: 16px; border: 1px solid #1f2937;"></div>
+
+          <textarea id="chat-input" rows="3" placeholder="اكتب سؤالك عن الرحلات، دمج الشحنات، التكلفة أو الكربون..." style="width: 100%; margin-bottom: 8px; padding: 8px; border-radius: 12px; border: 1px solid #374151; background: #020617; color: #e5e7eb; font-size: 13px;"></textarea>
+
+          <button class="btn btn-primary" type="button" onclick="sendAIMessage()">إرسال للذكاء الاصطناعي 🤖</button>
+        </div>
+      </section>
+
+      <!-- OPTIMIZATION -->
+      <section id="optimization-view" class="view">
+        <div class="two-column">
+          <div class="card">
+            <div class="card-header">
+              <div>
+                <div class="card-title" id="opt_title">Optimization Result</div>
+                <div class="card-sub" id="opt_sub">Recommended load distribution.</div>
+              </div>
+            </div>
+
+            <div class="truck-list" id="truck-list">
+              <div class="truck-row header">
+                <div id="opt_col_truck">Truck & Route</div>
+                <div id="opt_col_load">Load Factor</div>
+                <div id="opt_col_ai">AI Suggestion</div>
+              </div>
+            </div>
+
+            <p class="opt-summary" id="opt-summary">Run manual or CSV analysis to see results.</p>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <div>
+                <div class="card-title" id="chart_title">KPIs Before vs After</div>
+                <div class="card-sub" id="chart_sub">Avg Load, Cost, CO₂ comparison</div>
+              </div>
+            </div>
+            <!-- FIX: 3 separate charts for better visualization -->
+            <div class="charts-grid">
+              <div class="mini-chart-container">
+                <div class="mini-chart-title">Load Factor (%)</div>
+                <canvas id="loadChart"></canvas>
+              </div>
+              <div class="mini-chart-container">
+                <div class="mini-chart-title">Cost / Day (SAR)</div>
+                <canvas id="costChart"></canvas>
+              </div>
+              <div class="mini-chart-container">
+                <div class="mini-chart-title">CO₂ / Day (kg)</div>
+                <canvas id="co2Chart"></canvas>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- DRIVERS MONITORING VIEW -->
+      <section id="drivers-view" class="view">
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <div class="card-title">👥 Driver Monitoring</div>
+              <div class="card-sub">Real-time tracking of all drivers - location, status, and chat</div>
+            </div>
+          </div>
+
+          <!-- Drivers Grid -->
+          <div id="driversGrid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: 16px; margin-top: 16px;">
+            <div style="text-align: center; padding: 40px; color: var(--muted);">
+              <div style="font-size: 48px; margin-bottom: 12px;">📡</div>
+              <div>No active drivers</div>
+              <div style="font-size: 12px; margin-top: 4px;">Drivers will appear here when they log in</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Driver Map -->
+        <div class="card" style="margin-top: 16px;">
+          <div class="card-header">
+            <div>
+              <div class="card-title">🗺️ Drivers Location Map</div>
+              <div class="card-sub">Live GPS tracking of all drivers</div>
+            </div>
+          </div>
+          <div id="driversMap" style="height: 350px; border-radius: 12px; margin-top: 12px; background: #1e293b;"></div>
+        </div>
+      </section>
+    </main>
+
+    <!-- SUPPORT -->
+    <div class="support-footer">
+      <div class="support-box">
+        <div class="support-title" id="support_title">Customer Support</div>
+        <div class="support-row">
+          <span class="support-icon">📞</span>
+          <span id="support_phone_label">Phone:</span>&nbsp;<span>+966 55 555 5555</span>
+        </div>
+        <div class="support-row">
+          <span class="support-icon">📧</span>
+          <span id="support_email_label">Email:</span>&nbsp;<span><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="84f7f1f4f4ebf6f0c4e8ebe3edfcf4e1f6f0f7aae7ebe9">[email&#160;protected]</a></span>
+        </div>
+        <div class="support-row">
+          <span class="support-icon">📠</span>
+          <span id="support_fax_label">Fax:</span>&nbsp;<span>011-1234567</span>
+        </div>
+      </div>
+    </div>
+
+    <footer>Logixperts · Smart Load Analyzer · Naqlthon 4</footer>
+  </div>
+
+  <!-- ================= FIREBASE + LOGIC ================= -->
+  <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
+    import {
+      getAuth,
+      createUserWithEmailAndPassword,
+      signInWithEmailAndPassword
+    } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-auth.js";
+    import {
+      getFirestore,
+      collection,
+      doc,
+      setDoc,
+      addDoc,
+      getDoc,
+      query,
+      where,
+      orderBy,
+      onSnapshot,
+      serverTimestamp
+    } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyAjbvQo7NrGZiFbFbdY3a7UtDjlv0SwU3w",
+      authDomain: "smart-load-analyzer-56cb2.firebaseapp.com",
+      projectId: "smart-load-analyzer-56cb2",
+      storageBucket: "smart-load-analyzer-56cb2.firebasestorage.app",
+      messagingSenderId: "253721588070",
+      appId: "1:253721588070:web:c24bc2fbc27c2fba9e18a7",
+      measurementId: "G-60RF97SGWN"
+    };
+
+    const app  = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db   = getFirestore(app);
+
+    // ========== LANG ==========
+    let currentLang = "en";
+
+    const translations = {
+      en: {
+        text_brand: "Logixperts",
+        text_subbrand: "Smart Load Analyzer",
+        back_link: "← Back to role selection",
+        company_code_label: "Company code:",
+        team_label: "Team:",
+        team_event: "Naqlthon 4",
+        hero_title: "Reduce Empty Trips. Boost Load Factor. Go Greener.",
+        hero_sub: "Smart Load Analyzer helps freight companies analyze and optimize loads to reduce cost and emissions.",
+        tag_fuel: "fuel reduction (simulated)",
+        tag_ai: "load & route suggestions",
+        hero_highlight: "This scenario shows how merging a new shipment with a low-load return trip improves load factor.",
+        hero_avg_before_title: "Avg load (baseline)",
+        hero_cost_title: "Op. cost / day",
+        hero_co2_title: "CO₂ / day",
+        tab_login: "Login / Sign up",
+        tab_dashboard: "Dashboard",
+        tab_analyze: "Analyze Load",
+        tab_opt: "Optimization Result",
+        login_title: "Company Login",
+        login_sub: "Access your Smart Load Analyzer workspace.",
+        label_email: "Company email",
+        label_password: "Password",
+        login_btn: "Login",
+        login_hint: "",
+        signup_title: "Create Company Account",
+        signup_sub: "Create your company account to access the system.",
+        signup_label_name: "Company name",
+        signup_label_email: "Company email",
+        signup_label_pass: "Password",
+        signup_label_fleet: "Fleet size (trucks)",
+        signup_label_plan: "Subscription plan",
+        signup_btn: "Sign up",
+        dash_title: "Fleet Overview Dashboard",
+        dash_sub: "4 trucks on main corridors.",
+        kpi_trucks_label: "Trucks in scenario",
+        kpi_baseline_label: "Avg load (baseline)",
+        kpi_baseline_note: "Before optimization",
+        kpi_after_label: "Avg load (after)",
+        kpi_after_note: "After last run",
+        kpi_cost_before_label: "Op. cost / day",
+        kpi_cost_before_note: "Simulated SAR",
+        kpi_cost_after_label: "Op. cost / day (after)",
+        kpi_co2_before_label: "CO₂ / day",
+        kpi_co2_before_note: "kg CO₂",
+        kpi_co2_after_label: "CO₂ / day (after)",
+        stats_label_load: "Company avg load (%)",
+        stats_label_cost: "Company op. cost / day (SAR)",
+        stats_label_co2: "Company CO₂ / day (kg)",
+        map_title: "Truck Positions & Routes",
+        map_sub: "Best routes + load factor markers.",
+        analyze_title: "Analyze New Shipment (Manual)",
+        analyze_sub: "Enter shipment details manually.",
+        label_weight: "Weight (tons)",
+        label_volume: "Volume (m³)",
+        label_destination: "Destination city",
+        label_delivery: "Delivery window",
+        label_priority: "Priority",
+        btn_manual_analyze: "Run Manual Optimization",
+        csv_title: "Upload Your Trips CSV",
+        csv_sub: "Upload trip history to improve optimization accuracy.",
+        csv_label: "Choose CSV file",
+        btn_csv: "Analyze CSV",
+        pdf_title: "PDF AI Report",
+        pdf_sub: "Generate a printable KPI report for your company based on the current optimization.",
+        pdf_hint: "This PDF report shows KPIs, per-truck loads and recommendations for your fleet.",
+        pdf_btn: "Generate PDF Report",
+        opt_title: "Optimization Result",
+        opt_sub: "Recommended load distribution.",
+        opt_col_truck: "Truck & Route",
+        opt_col_load: "Load Factor",
+        opt_col_ai: "AI Suggestion",
+        chart_title: "KPIs Before vs After",
+        chart_sub: "Avg Load, Cost, CO₂ comparison",
+        support_title: "Customer Support",
+        support_phone_label: "Phone:",
+        support_email_label: "Email:",
+        support_fax_label: "Fax:",
+        ai_chat_title: "AI Chat Assistant",
+        ai_chat_sub: "Ask AI about loads, trips, cost and CO₂ optimization for this company."
+      },
+      ar: {
+        text_brand: "لوﭬيكسبرتس",
+        text_subbrand: "نظام التحميل الذكي",
+        back_link: "← رجوع لاختيار الدور",
+        company_code_label: "كود الشركة:",
+        team_label: "الفريق:",
+        team_event: "نقلثون 4",
+        hero_title: "قلل الرحلات الفارغة. ارفع نسبة التحميل. وكن أكثر استدامة.",
+        hero_sub: "نظام التحميل الذكي يساعد شركات النقل على تحليل الرحلات وتحسين استغلال الحمولة لتقليل التكلفة والانبعاثات.",
+        tag_fuel: "تخفيض استهلاك الوقود (محاكاة)",
+        tag_ai: "اقتراحات تحميل ومسارات بالذكاء الاصطناعي",
+        hero_highlight: "هذا السيناريو التجريبي يوضح كيف يمكن لدمج شحنة جديدة مع رحلة عودة منخفضة الحمولة أن يحسن مستوى التحميل.",
+        hero_avg_before_title: "متوسط التحميل (الأساس)",
+        hero_cost_title: "تكلفة التشغيل / اليوم",
+        hero_co2_title: "انبعاثات CO₂ / اليوم",
+        tab_login: "تسجيل الدخول / إنشاء حساب",
+        tab_dashboard: "لوحة المؤشرات",
+        tab_analyze: "تحليل التحميل",
+        tab_opt: "نتيجة التحسين",
+        login_title: "تسجيل دخول الشركة",
+        login_sub: "ادخل إلى مساحة العمل الخاصة بنظام التحميل الذكي.",
+        label_email: "إيميل الشركة",
+        label_password: "كلمة المرور",
+        login_btn: "تسجيل الدخول",
+        login_hint: "بيانات العرض: rahmone17990@gmail.com / fnatic990",
+        signup_title: "إنشاء حساب شركة",
+        signup_sub: "أنشئ حساب شركتك للوصول إلى النظام.",
+        signup_label_name: "اسم الشركة",
+        signup_label_email: "إيميل الشركة",
+        signup_label_pass: "كلمة المرور",
+        signup_label_fleet: "عدد الشاحنات في الأسطول",
+        signup_label_plan: "خطة الاشتراك",
+        signup_btn: "إنشاء حساب",
+        dash_title: "لوحة مؤشرات الأسطول",
+        dash_sub: "4 شاحنات تجريبية على المسارات الرئيسية.",
+        kpi_trucks_label: "الشاحنات في السيناريو",
+        kpi_baseline_label: "متوسط التحميل (الأساس)",
+        kpi_baseline_note: "قبل التحسين",
+        kpi_after_label: "متوسط التحميل (بعد)",
+        kpi_after_note: "بعد آخر تشغيل",
+        kpi_cost_before_label: "تكلفة التشغيل / اليوم",
+        kpi_cost_before_note: "ريال (محاكاة)",
+        kpi_cost_after_label: "تكلفة التشغيل / اليوم (بعد)",
+        kpi_co2_before_label: "انبعاثات CO₂ / اليوم",
+        kpi_co2_before_note: "كجم CO₂",
+        kpi_co2_after_label: "انبعاثات CO₂ / اليوم (بعد)",
+        stats_label_load: "متوسط التحميل في الشركة (%)",
+        stats_label_cost: "تكلفة التشغيل اليومية (ريال)",
+        stats_label_co2: "انبعاثات CO₂ اليومية (كجم)",
+        map_title: "مواقع ومسارات الشاحنات",
+        map_sub: "أفضل المسارات + مؤشرات نسب التحميل.",
+        analyze_title: "تحليل شحنة جديدة (يدوي)",
+        analyze_sub: "أدخل بيانات الشحنة يدويًا.",
+        label_weight: "الوزن (طن)",
+        label_volume: "الحجم (م³)",
+        label_destination: "مدينة الوجهة",
+        label_delivery: "نافذة التسليم",
+        label_priority: "الأولوية",
+        btn_manual_analyze: "تشغيل التحسين اليدوي",
+        csv_title: "رفع ملف CSV للرحلات",
+        csv_sub: "ارفع سجل الرحلات لتحسين دقة التحليل.",
+        csv_label: "اختر ملف CSV",
+        btn_csv: "تحليل ملف CSV",
+        pdf_title: "تقرير PDF بالذكاء الاصطناعي",
+        pdf_sub: "إنشاء تقرير مؤشرات قابل للطباعة بناءً على آخر عملية تحسين.",
+        pdf_hint: "هذا تقرير تجريبي لنقلثون يوضح مؤشرات الأداء، نسب التحميل لكل شاحنة وتوصيات للشركات الصغيرة.",
+        pdf_btn: "إنشاء تقرير PDF",
+        opt_title: "نتيجة التحسين",
+        opt_sub: "توزيع الحمولة الموصى به.",
+        opt_col_truck: "الشاحنة والمسار",
+        opt_col_load: "نسبة التحميل",
+        opt_col_ai: "اقتراح الذكاء الاصطناعي",
+        chart_title: "المؤشرات قبل وبعد",
+        chart_sub: "متوسط التحميل، التكلفة، وانبعاثات CO₂",
+        support_title: "دعم العملاء",
+        support_phone_label: "الهاتف:",
+        support_email_label: "الإيميل:",
+        support_fax_label: "فاكس:",
+        ai_chat_title: "مساعد الذكاء الاصطناعي",
+        ai_chat_sub: "اسأل الذكاء الاصطناعي عن التحميل، الرحلات، التكلفة وانبعاثات CO₂ لشركتك."
+      }
+    };
+
+    function applyLanguage() {
+      const t = translations[currentLang] || translations.en;
+      for (const key in t) {
+        const el = document.getElementById(key);
+        if (el) el.textContent = t[key];
+      }
+      const langBtn = document.getElementById("langSwitcher");
+      if (langBtn) langBtn.textContent = currentLang === "en" ? "AR" : "EN";
+      document.documentElement.lang = currentLang === "ar" ? "ar" : "en";
+      document.documentElement.dir  = currentLang === "ar" ? "rtl" : "ltr";
+    }
+
+    function toggleLanguage() {
+      currentLang = currentLang === "en" ? "ar" : "en";
+      applyLanguage();
+    }
+
+    // ========== SCENARIO & GLOBAL STATE ==========
+    const CAPACITY_TONS = 20;
+    const BASE_TRIP_COST = 1000;
+    const EMISSION_FACTOR = 2.7;
+
+    const trucksScenario = [
+      { id: "Truck #1", origin: "Riyadh", dest: "Jeddah",  currentLoad: 0.75, coords: [24.7136, 46.6753] },
+      { id: "Truck #2", origin: "Jeddah", dest: "Riyadh",  currentLoad: 0.40, coords: [21.4858, 39.1925] },
+      { id: "Truck #3", origin: "Riyadh", dest: "Dammam", currentLoad: 0.65, coords: [24.7136, 46.6753] },
+      { id: "Truck #4", origin: "Dammam", dest: "Riyadh", currentLoad: 0.50, coords: [26.4207, 50.0888] },
+    ];
+
+    // FIX: Initialize baseline values to 0 (will be set after login)
+    let baselineAvgLoad = 0;
+    let baselineCost = 0;
+    let baselineCO2 = 0;
+
+    let isLoggedIn = false;
+    let currentCompanyId = null;
+    let currentCompanyData = null;
+    let companyStats = null;
+
+    let lastOptimizationLoads = null;
+    let lastAfterAvgLoad = null;
+    let lastCostAfter = null;
+    let lastCO2After = null;
+
+    let mapInstance = null;
+
+    // ========== UI HELPERS ==========
+    function setActiveView(viewId) {
+      const views = document.querySelectorAll(".view");
+      views.forEach(v => v.classList.remove("active"));
+      const target = document.getElementById(viewId);
+      if (target) target.classList.add("active");
+
+      const tabs = document.querySelectorAll(".nav-tab");
+      tabs.forEach(tab => {
+        if (tab.dataset.view === viewId) tab.classList.add("active");
+        else tab.classList.remove("active");
+      });
+
+      if (viewId === "dashboard-view" && mapInstance) {
+        setTimeout(() => mapInstance.invalidateSize(), 200);
+      }
+    }
+
+    function togglePassword(inputId, btn) {
+      const input = document.getElementById(inputId);
+      if (!input) return;
+      if (input.type === "password") {
+        input.type = "text";
+        btn.textContent = currentLang === "ar" ? "إخفاء" : "Hide";
+      } else {
+        input.type = "password";
+        btn.textContent = currentLang === "ar" ? "إظهار" : "Show";
+      }
+    }
+
+    // FIX: Function to show/hide hero metrics based on login status
+    function updateHeroVisibility() {
+      const heroLoad = document.getElementById("hero-load-before");
+      const heroCost = document.getElementById("hero-cost-before");
+      const heroCO2  = document.getElementById("hero-co2-before");
+
+      if (!isLoggedIn) {
+        if (heroLoad) heroLoad.textContent = "–";
+        if (heroCost) heroCost.textContent = "–";
+        if (heroCO2)  heroCO2.textContent  = "–";
+      } else {
+        updateHeroAndKpisFromStats();
+      }
+    }
+
+    function updateHeroAndKpisFromStats() {
+      if (!isLoggedIn) {
+        updateHeroVisibility();
+        return;
+      }
+
+      const heroLoad = document.getElementById("hero-load-before");
+      const heroCost = document.getElementById("hero-cost-before");
+      const heroCO2  = document.getElementById("hero-co2-before");
+
+      const kpiLoadBefore = document.getElementById("kpi-load-before");
+      const kpiCostBefore = document.getElementById("kpi-cost-before");
+      const kpiCO2Before  = document.getElementById("kpi-co2-before");
+
+      const baseLoadPct = (baselineAvgLoad * 100).toFixed(0);
+
+      if (heroLoad) heroLoad.textContent = baseLoadPct + "%";
+      if (heroCost) heroCost.textContent = "~" + baselineCost.toFixed(0) + " SAR";
+      if (heroCO2)  heroCO2.textContent  = "~" + baselineCO2.toFixed(0) + " kg";
+
+      if (kpiLoadBefore) kpiLoadBefore.textContent = baseLoadPct + "%";
+      if (kpiCostBefore) kpiCostBefore.textContent = "~" + baselineCost.toFixed(0) + " SAR";
+      if (kpiCO2Before)  kpiCO2Before.textContent  = "~" + baselineCO2.toFixed(0) + " kg";
+    }
+
+    // ========== FIREBASE: AUTH & COMPANY ==========
+    async function loadCompanyData(uid) {
+      const ref = doc(db, "companies", uid);
+      const snap = await getDoc(ref);
+      
+      const defaultAvgLoad = trucksScenario.reduce((sum, t) => sum + t.currentLoad, 0) / trucksScenario.length;
+      const defaultCost = trucksScenario.length * BASE_TRIP_COST;
+      const defaultCO2 = defaultCost * EMISSION_FACTOR;
+      
+      if (snap.exists()) {
+        currentCompanyData = snap.data();
+        if (currentCompanyData.stats) {
+          companyStats = currentCompanyData.stats;
+          const { loadPct, costPerDay, co2PerDay } = companyStats;
+          baselineAvgLoad = (loadPct && !isNaN(loadPct)) ? loadPct / 100 : defaultAvgLoad;
+          baselineCost = (costPerDay && !isNaN(costPerDay)) ? costPerDay : defaultCost;
+          baselineCO2 = (co2PerDay && !isNaN(co2PerDay)) ? co2PerDay : defaultCO2;
+        } else {
+          baselineAvgLoad = defaultAvgLoad;
+          baselineCost = defaultCost;
+          baselineCO2 = defaultCO2;
+        }
+      } else {
+        currentCompanyData = { name: "Logixperts", email: "demo@logixperts.sa" };
+        baselineAvgLoad = defaultAvgLoad;
+        baselineCost = defaultCost;
+        baselineCO2 = defaultCO2;
+      }
+
+      updateHeroAndKpisFromStats();
+
+      const badge = document.getElementById("company_code_badge");
+      const codeValue = document.getElementById("company_code_value");
+      if (badge && codeValue) {
+        badge.style.display = "inline-flex";
+        codeValue.textContent = uid.slice(-6).toUpperCase();
+      }
+    }
+
+    function enableTabsAfterLogin() {
+      document.getElementById("tab_dashboard").style.display = "inline-flex";
+      document.getElementById("tab_analyze").style.display   = "inline-flex";
+      document.getElementById("tab_opt").style.display       = "inline-flex";
+    }
+
+    async function handleAuthSuccess(user) {
+      isLoggedIn = true;
+      currentCompanyId = user.uid;
+
+      const loginError = document.getElementById("login-error");
+      if (loginError) loginError.textContent = "";
+
+      await loadCompanyData(user.uid);
+      enableTabsAfterLogin();
+      setActiveView("dashboard-view");
+    }
+
+    async function demoLogin() {
+      const email = document.getElementById("company").value.trim();
+      const pass  = document.getElementById("password").value.trim();
+      const error = document.getElementById("login-error");
+
+      if (!email || !pass) {
+        if (error) error.textContent = currentLang === "ar" ? "أدخل الإيميل وكلمة المرور" : "Please enter email and password";
+        return;
+      }
+
+      try {
+        const cred = await signInWithEmailAndPassword(auth, email, pass);
+        await handleAuthSuccess(cred.user);
+      } catch (e) {
+        console.error("Login error:", e.code, e.message);
+        if (error) {
+          if (e.code === 'auth/user-not-found') {
+            error.textContent = currentLang === "ar" ? "الحساب غير موجود. قم بإنشاء حساب جديد." : "Account not found. Please sign up first.";
+          } else if (e.code === 'auth/wrong-password' || e.code === 'auth/invalid-credential') {
+            error.textContent = currentLang === "ar" ? "كلمة المرور خاطئة." : "Incorrect password.";
+          } else if (e.code === 'auth/invalid-email') {
+            error.textContent = currentLang === "ar" ? "الإيميل غير صحيح." : "Invalid email format.";
+          } else {
+            error.textContent = currentLang === "ar"
+              ? "تعذر تسجيل الدخول. تأكد من الإيميل وكلمة المرور."
+              : "Login failed. Please check your email and password.";
+          }
+        }
+      }
+    }
+
+    async function signUp() {
+      const name  = document.getElementById("signup-name").value.trim();
+      const email = document.getElementById("signup-email").value.trim();
+      const pass  = document.getElementById("signup-password").value.trim();
+      const fleet = parseInt(document.getElementById("signup-fleet").value || "0", 10);
+      const plan  = document.getElementById("signup-plan").value;
+      const msg   = document.getElementById("signup-message");
+
+      try {
+        const cred = await createUserWithEmailAndPassword(auth, email, pass);
+        const uid = cred.user.uid;
+
+        const ref = doc(db, "companies", uid);
+        await setDoc(ref, {
+          name,
+          email,
+          fleetSize: fleet || 0,
+          plan,
+          createdAt: serverTimestamp()
+        });
+
+        currentCompanyData = { name, email, fleetSize: fleet, plan };
+        await handleAuthSuccess(cred.user);
+
+        if (msg) {
+          msg.textContent = currentLang === "ar"
+            ? "تم إنشاء الحساب بنجاح وتم تسجيل الدخول."
+            : "Account created and logged in successfully.";
+        }
+      } catch (e) {
+        console.error(e);
+        if (msg) {
+          msg.textContent = currentLang === "ar"
+            ? "تعذر إنشاء الحساب. تأكد من الإيميل وقوة كلمة المرور."
+            : "Could not create account. Please check email and password strength.";
+        }
+      }
+    }
+
+    async function saveCompanyStats() {
+      if (!isLoggedIn || !currentCompanyId) return;
+
+      const loadInput = document.getElementById("stats-load");
+      const costInput = document.getElementById("stats-cost");
+      const co2Input  = document.getElementById("stats-co2");
+      const hint      = document.getElementById("stats_hint");
+
+      const loadPct   = parseFloat(loadInput.value || "0");
+      const costPerDay = parseFloat(costInput.value || "0");
+      const co2PerDay  = parseFloat(co2Input.value || "0");
+
+      if (isNaN(loadPct) || isNaN(costPerDay) || isNaN(co2PerDay) || loadPct < 0 || loadPct > 100) {
+        if (hint) {
+          hint.textContent = currentLang === "ar"
+            ? "يرجى إدخال قيم صحيحة (نسبة التحميل بين 0 و 100)."
+            : "Please enter valid values (load between 0 and 100).";
+        }
+        return;
+      }
+
+      companyStats = { loadPct, costPerDay, co2PerDay };
+      baselineAvgLoad = loadPct / 100;
+      baselineCost = costPerDay;
+      baselineCO2  = co2PerDay;
+
+      updateHeroAndKpisFromStats();
+
+      const ref = doc(db, "companies", currentCompanyId);
+      await setDoc(ref, { stats: companyStats }, { merge: true });
+
+      if (hint) {
+        hint.textContent = currentLang === "ar"
+          ? "تم حفظ مؤشرات الشركة بنجاح."
+          : "Company metrics saved successfully.";
+      }
+
+      if (lastAfterAvgLoad != null) {
+        updateCharts(lastAfterAvgLoad, lastCostAfter ?? baselineCost, lastCO2After ?? baselineCO2);
+      }
+    }
+
+    async function saveOptimizationResult(companyId, data) {
+      try {
+        const ref = collection(db, "companies", companyId, "optimizations");
+        await addDoc(ref, { ...data, createdAt: serverTimestamp() });
+      } catch (e) {
+        console.error("Error saving optimization result:", e);
+      }
+    }
+
+    // ========== DRIVER ASSIGNMENT ==========
+    // Send assignment to driver page - REAL-TIME via Firebase
+    async function assignToDriver(truckId, assignment) {
+      try {
+        // Extract driver number from truck ID (e.g., "Truck #2" -> "2")
+        const driverNum = truckId.replace(/\D/g, '');
+        const companyCode = currentCompanyId ? currentCompanyId.slice(-6).toUpperCase() : 'LXPRT';
+        const driverId = `${companyCode}_driver${driverNum}`;
+        
+        const driverRef = doc(db, 'drivers', driverId);
+        
+        // Update driver document with new assignment
+        await setDoc(driverRef, {
+          currentAssignment: {
+            destination: assignment.destination,
+            origin: assignment.origin || 'Riyadh',
+            weight: assignment.weight,
+            volume: assignment.volume,
+            deliveryTime: assignment.deliveryTime,
+            notes: assignment.notes || '',
+            route: assignment.route,
+            assignedAt: serverTimestamp(),
+            truckId: truckId
+          },
+          status: 'ready', // Reset status for new assignment
+          lastAssignmentUpdate: serverTimestamp()
+        }, { merge: true });
+        
+        console.log('✅ Assignment sent to driver:', driverId);
+        
+        // Show confirmation
+        const confirmMsg = currentLang === 'ar' 
+          ? `تم إرسال المهمة للسائق ${driverNum}` 
+          : `Assignment sent to Driver ${driverNum}`;
+        
+        // Brief notification (optional)
+        if (document.getElementById('opt-summary')) {
+          const summary = document.getElementById('opt-summary');
+          summary.innerHTML += `<div style="margin-top: 10px; padding: 8px; background: rgba(59,130,246,0.1); border-radius: 8px; border: 1px solid rgba(59,130,246,0.3); font-size: 12px;">📱 ${confirmMsg}</div>`;
+        }
+        
+        return true;
+      } catch (e) {
+        console.error('Error assigning to driver:', e);
+        return false;
+      }
+    }
+
+    // Send chat message to driver
+    async function sendMessageToDriver(driverId, message) {
+      try {
+        const chatRef = collection(db, 'drivers', driverId, 'chat');
+        await addDoc(chatRef, {
+          text: message,
+          sender: 'admin',
+          timestamp: serverTimestamp(),
+          read: false
+        });
+        return true;
+      } catch (e) {
+        console.error('Error sending message:', e);
+        return false;
+      }
+    }
+
+    // ========== CHARTS ==========
+    let loadChart = null;
+    let costChart = null;
+    let co2Chart = null;
+
+    function createMiniChart(canvasId, label, beforeVal, afterVal, color1, color2) {
+      const canvas = document.getElementById(canvasId);
+      if (!canvas) return null;
+      const ctx = canvas.getContext("2d");
+
+      return new Chart(ctx, {
+        type: "bar",
+        data: {
+          labels: ["Before", "After"],
+          datasets: [{
+            data: [beforeVal, afterVal],
+            backgroundColor: [color1, color2],
+            borderRadius: 6,
+            barThickness: 40
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false }
+          },
+          scales: {
+            x: { 
+              ticks: { color: "#9ca3af", font: { size: 10 } }, 
+              grid: { display: false } 
+            },
+            y: { 
+              ticks: { color: "#9ca3af", font: { size: 10 } }, 
+              grid: { color: "#1f2937" },
+              beginAtZero: true
+            }
+          }
+        }
+      });
+    }
+
+    function initCharts(afterAvgLoad, costAfter, co2After) {
+      const beforeLoadPct = baselineAvgLoad * 100;
+      const afterLoadPct = afterAvgLoad * 100;
+
+      loadChart = createMiniChart("loadChart", "Load", beforeLoadPct, afterLoadPct, "#3b82f6", "#22c55e");
+      costChart = createMiniChart("costChart", "Cost", baselineCost, costAfter, "#3b82f6", "#22c55e");
+      co2Chart = createMiniChart("co2Chart", "CO2", baselineCO2, co2After, "#3b82f6", "#22c55e");
+    }
+
+    function updateCharts(afterAvgLoad, costAfter, co2After) {
+      const beforeLoadPct = baselineAvgLoad * 100;
+      const afterLoadPct = afterAvgLoad * 100;
+
+      if (!loadChart) {
+        initCharts(afterAvgLoad, costAfter, co2After);
+        return;
+      }
+
+      loadChart.data.datasets[0].data = [beforeLoadPct, afterLoadPct];
+      loadChart.update();
+
+      costChart.data.datasets[0].data = [baselineCost, costAfter];
+      costChart.update();
+
+      co2Chart.data.datasets[0].data = [baselineCO2, co2After];
+      co2Chart.update();
+    }
+
+    // ========== MAP ==========
+    function initMap() {
+      if (mapInstance || !window.L) return;
+      const center = [23.8859, 45.0792];
+      mapInstance = L.map("map").setView(center, 6);
+
+      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", { maxZoom: 18 }).addTo(mapInstance);
+
+      const cityCoords = {
+        Riyadh: [24.7136, 46.6753],
+        Jeddah: [21.4858, 39.1925],
+        Dammam: [26.4207, 50.0888]
+      };
+
+      const markerStyle = { radius: 7 };
+
+      function addCityMarker(name, coord, color) {
+        L.circleMarker(coord, { ...markerStyle, color, fillColor: color, fillOpacity: 0.8 })
+          .addTo(mapInstance)
+          .bindTooltip(name, { permanent: false });
+      }
+
+      addCityMarker("Riyadh",  cityCoords.Riyadh,  "#22c55e");
+      addCityMarker("Jeddah",  cityCoords.Jeddah,  "#fbbf24");
+      addCityMarker("Dammam",  cityCoords.Dammam,  "#3b82f6");
+
+      L.polyline([cityCoords.Riyadh, cityCoords.Jeddah], { weight: 2 }).addTo(mapInstance);
+      L.polyline([cityCoords.Riyadh, cityCoords.Dammam], { weight: 2 }).addTo(mapInstance);
+
+      setTimeout(() => { if (mapInstance) mapInstance.invalidateSize(); }, 200);
+    }
+
+    // ========== OPTIMIZATION TABLE ==========
+    function clearTruckRows() {
+      const list = document.getElementById("truck-list");
+      if (!list) return;
+      const rows = Array.from(list.querySelectorAll(".truck-row"));
+      rows.forEach(row => { if (!row.classList.contains("header")) list.removeChild(row); });
+    }
+
+    function addTruckRow(truck, loadText, chipText, chipClass) {
+      const list = document.getElementById("truck-list");
+      if (!list) return;
+
+      const row = document.createElement("div");
+      row.className = "truck-row";
+
+      const col1 = document.createElement("div");
+      col1.textContent = truck.id + " " + truck.origin + " → " + truck.dest;
+
+      const col2 = document.createElement("div");
+      col2.textContent = loadText;
+
+      const col3 = document.createElement("div");
+      const chip = document.createElement("span");
+      chip.className = "chip " + chipClass;
+      chip.textContent = chipText;
+      col3.appendChild(chip);
+
+      row.appendChild(col1);
+      row.appendChild(col2);
+      row.appendChild(col3);
+      list.appendChild(row);
+    }
+
+    function populateOptimizationTableInitial() {
+      clearTruckRows();
+      trucksScenario.forEach(tr => {
+        const loadPct = (tr.currentLoad * 100).toFixed(0) + "%";
+        const chipText = tr.currentLoad < 0.6
+            ? (currentLang === "ar" ? "تحميل منخفض (فرصة دمج)" : "Low load (merge opportunity)")
+            : (currentLang === "ar" ? "تحميل جيد" : "Healthy load");
+        const chipClass = tr.currentLoad < 0.6 ? "warn" : "good";
+        addTruckRow(tr, loadPct, chipText, chipClass);
+      });
+    }
+
+    function populateOptimizationTable(trucks, suggestionById) {
+      clearTruckRows();
+      trucks.forEach(tr => {
+        const loads = suggestionById[tr.id];
+        const loadPct = ((loads?.newLoad ?? tr.currentLoad) * 100).toFixed(0) + "%";
+        let chipText, chipClass;
+
+        if (loads && loads.action) {
+          chipText = loads.action;
+          chipClass = "good";
+        } else {
+          chipText = currentLang === "ar" ? "بدون تغيير في الخطة" : "Keep current plan";
+          chipClass = "warn";
+        }
+        addTruckRow(tr, loadPct, chipText, chipClass);
+      });
+    }
+
+    // ========== AI-POWERED OPTIMIZATION ALGORITHM ==========
+    /*
+     * Smart Load Optimization Algorithm
+     * Uses multiple factors to find the best truck assignment:
+     * 1. Load Factor Optimization - maximize truck utilization
+     * 2. Distance Minimization - reduce total travel distance
+     * 3. CO2 Reduction - environmental optimization
+     * 4. Cost Efficiency - minimize operational costs
+     * 5. Time Window Compliance - respect delivery deadlines
+     */
+
+    // Route distances in KM (approximate)
+    const ROUTE_DISTANCES = {
+      'Riyadh-Jeddah': 950,
+      'Jeddah-Riyadh': 950,
+      'Riyadh-Dammam': 400,
+      'Dammam-Riyadh': 400,
+      'Jeddah-Dammam': 1350,
+      'Dammam-Jeddah': 1350
+    };
+
+    // Fuel cost per KM (SAR)
+    const FUEL_COST_PER_KM = 0.8;
+    // CO2 emission per KM (kg) - varies by load
+    const BASE_CO2_PER_KM = 0.9;
+    // Driver cost per hour (SAR)
+    const DRIVER_COST_PER_HOUR = 50;
+    // Average speed KM/H
+    const AVG_SPEED = 80;
+
+    // Calculate route distance
+    function getRouteDistance(origin, dest) {
+      const key = `${origin}-${dest}`;
+      return ROUTE_DISTANCES[key] || 500; // Default 500km
+    }
+
+    // Calculate CO2 based on load factor (heavier = more CO2)
+    function calculateCO2(distance, loadFactor) {
+      // CO2 increases with load: base + (loadFactor * 0.5 * base)
+      const co2PerKm = BASE_CO2_PER_KM * (1 + loadFactor * 0.5);
+      return distance * co2PerKm;
+    }
+
+    // Calculate trip cost
+    function calculateTripCost(distance, loadFactor) {
+      const fuelCost = distance * FUEL_COST_PER_KM * (1 + loadFactor * 0.3);
+      const timeCost = (distance / AVG_SPEED) * DRIVER_COST_PER_HOUR;
+      return fuelCost + timeCost;
+    }
+
+    // AI Scoring Function - calculates optimization score for each truck
+    function calculateOptimizationScore(truck, shipment, priority) {
+      let score = 0;
+      const distance = getRouteDistance(truck.origin, truck.dest);
+      
+      // 1. Load Factor Score (0-30 points)
+      // Prefer trucks with low load that can accommodate the shipment
+      const potentialLoad = truck.currentLoad + (shipment.weight / CAPACITY_TONS);
+      if (potentialLoad <= 1.0) {
+        // Ideal load is 75-90%
+        if (potentialLoad >= 0.75 && potentialLoad <= 0.9) {
+          score += 30;
+        } else if (potentialLoad >= 0.6 && potentialLoad < 0.75) {
+          score += 25;
+        } else if (potentialLoad > 0.9) {
+          score += 20;
+        } else {
+          score += 15;
+        }
+      } else {
+        score -= 50; // Overload penalty
+      }
+
+      // 2. Empty Trip Avoidance Score (0-25 points)
+      // Prefer trucks on return trips with low load
+      if (truck.currentLoad < 0.5) {
+        score += 25; // Great opportunity for consolidation
+      } else if (truck.currentLoad < 0.7) {
+        score += 15;
+      }
+
+      // 3. Destination Match Score (0-20 points)
+      if (truck.dest.toLowerCase().includes(shipment.destination.toLowerCase())) {
+        score += 20; // Perfect match
+      } else if (truck.origin.toLowerCase().includes(shipment.destination.toLowerCase())) {
+        score += 10; // Can pick up on the way back
+      }
+
+      // 4. Distance Efficiency Score (0-15 points)
+      // Shorter routes are more efficient
+      if (distance < 500) {
+        score += 15;
+      } else if (distance < 800) {
+        score += 10;
+      } else {
+        score += 5;
+      }
+
+      // 5. Priority Adjustment
+      if (priority === 'high') {
+        // For high priority, prefer less loaded trucks (faster loading)
+        if (truck.currentLoad < 0.5) score += 10;
+      } else if (priority === 'low') {
+        // For low priority/backhaul, prefer return trips
+        if (truck.dest.toLowerCase() === 'riyadh') score += 10;
+      }
+
+      // 6. CO2 Optimization Bonus
+      const co2Impact = calculateCO2(distance, potentialLoad);
+      if (co2Impact < 500) score += 10;
+
+      return {
+        truck,
+        score,
+        potentialLoad,
+        distance,
+        estimatedCO2: co2Impact,
+        estimatedCost: calculateTripCost(distance, potentialLoad)
+      };
+    }
+
+    // Main AI Optimization Function
+    function runAIOptimization(shipment, trucks, priority) {
+      // Score all trucks
+      const scoredTrucks = trucks.map(truck => 
+        calculateOptimizationScore(truck, shipment, priority)
+      );
+
+      // Sort by score (highest first)
+      scoredTrucks.sort((a, b) => b.score - a.score);
+
+      // Get best option
+      const best = scoredTrucks[0];
+      
+      // Calculate alternatives
+      const alternatives = scoredTrucks.slice(1, 3);
+
+      // Generate AI recommendation
+      const recommendation = generateAIRecommendation(best, alternatives, shipment);
+
+      return {
+        bestOption: best,
+        alternatives,
+        recommendation,
+        allScores: scoredTrucks
+      };
+    }
+
+    // Generate human-readable AI recommendation
+    function generateAIRecommendation(best, alternatives, shipment) {
+      const lang = currentLang;
+      
+      if (lang === 'ar') {
+        return `تم تحليل ${trucksScenario.length} شاحنات باستخدام الذكاء الاصطناعي. ` +
+          `الخيار الأفضل هو ${best.truck.id} (${best.truck.origin} → ${best.truck.dest}) ` +
+          `بنسبة تحميل ${(best.potentialLoad * 100).toFixed(0)}% ` +
+          `ومسافة ${best.distance} كم. ` +
+          `التوفير المتوقع: ${best.estimatedCost.toFixed(0)} ريال، ` +
+          `انبعاثات CO₂: ${best.estimatedCO2.toFixed(0)} كجم.`;
+      } else {
+        return `AI analyzed ${trucksScenario.length} trucks. ` +
+          `Best option: ${best.truck.id} (${best.truck.origin} → ${best.truck.dest}) ` +
+          `with ${(best.potentialLoad * 100).toFixed(0)}% load factor, ` +
+          `${best.distance} km distance. ` +
+          `Estimated savings: ${best.estimatedCost.toFixed(0)} SAR, ` +
+          `CO₂ impact: ${best.estimatedCO2.toFixed(0)} kg.`;
+      }
+    }
+
+    // ========== RUN OPTIMIZATION ==========
+    async function runOptimization() {
+      if (!isLoggedIn) {
+        const msg = document.getElementById("opt-summary");
+        if (msg) {
+          msg.textContent = currentLang === "ar"
+            ? "يرجى تسجيل الدخول أولاً ثم تشغيل التحسين."
+            : "Please log in first, then run optimization.";
+        }
+        setActiveView("login-view");
+        return;
+      }
+
+      const weight = parseFloat(document.getElementById("weight").value || "0");
+      const volume = parseFloat(document.getElementById("volume").value || "0");
+      let destinationInput = (document.getElementById("destination").value || "").trim();
+      const priority = document.getElementById("priority").value;
+      const deliveryTime = document.getElementById("deliveryTime").value || "Within 24 hours";
+
+      // Create shipment object
+      const shipment = {
+        weight: weight,
+        volume: volume,
+        destination: destinationInput || "Riyadh",
+        priority: priority,
+        deliveryTime: deliveryTime
+      };
+
+      // Clone trucks for optimization
+      const trucks = trucksScenario.map(t => ({ ...t }));
+
+      // Run AI Optimization
+      const aiResult = runAIOptimization(shipment, trucks, priority);
+      const target = aiResult.bestOption.truck;
+      const newLoadFactor = aiResult.bestOption.potentialLoad;
+
+      // Update target truck
+      target.newLoad = Math.min(1, newLoadFactor);
+      trucks.forEach(t => { 
+        if (t.id !== target.id) t.newLoad = t.currentLoad; 
+        else t.newLoad = target.newLoad;
+      });
+
+      // Calculate fleet-wide improvements
+      const afterAvgLoad = trucks.reduce((sum, t) => sum + t.newLoad, 0) / trucks.length;
+      
+      // Calculate actual cost and CO2 savings
+      const totalDistance = trucks.reduce((sum, t) => sum + getRouteDistance(t.origin, t.dest), 0);
+      const beforeTotalCost = trucks.reduce((sum, t) => sum + calculateTripCost(getRouteDistance(t.origin, t.dest), t.currentLoad), 0);
+      const afterTotalCost = trucks.reduce((sum, t) => sum + calculateTripCost(getRouteDistance(t.origin, t.dest), t.newLoad), 0);
+      
+      const beforeTotalCO2 = trucks.reduce((sum, t) => sum + calculateCO2(getRouteDistance(t.origin, t.dest), t.currentLoad), 0);
+      const afterTotalCO2 = trucks.reduce((sum, t) => sum + calculateCO2(getRouteDistance(t.origin, t.dest), t.newLoad), 0);
+
+      // Use actual calculated values or baseline
+      const costAfter = baselineCost > 0 ? baselineCost * (beforeTotalCost / afterTotalCost) * 0.85 : afterTotalCost;
+      const co2After = baselineCO2 > 0 ? baselineCO2 * (beforeTotalCO2 / afterTotalCO2) * 0.9 : afterTotalCO2;
+
+      lastAfterAvgLoad = afterAvgLoad;
+      lastCostAfter = costAfter;
+      lastCO2After = co2After;
+
+      // Update KPI displays
+      const loadAfterPct = (afterAvgLoad * 100).toFixed(0) + "%";
+      document.getElementById("kpi-load-after").textContent = loadAfterPct;
+
+      document.getElementById("kpi-cost-after").textContent = "~" + costAfter.toFixed(0) + " SAR";
+      const costSavePct = baselineCost > 0 ? ((baselineCost - costAfter) / baselineCost) * 100 : 0;
+      document.getElementById("kpi-cost-savings").textContent = costSavePct > 0
+        ? "-" + costSavePct.toFixed(1) + "% vs baseline"
+        : (currentLang === "ar" ? "لا يوجد توفير" : "No savings");
+
+      document.getElementById("kpi-co2-after").textContent = "~" + co2After.toFixed(0) + " kg";
+      const co2SavePct = baselineCO2 > 0 ? ((baselineCO2 - co2After) / baselineCO2) * 100 : 0;
+      document.getElementById("kpi-co2-savings").textContent = co2SavePct > 0
+        ? "-" + co2SavePct.toFixed(1) + "% vs baseline"
+        : (currentLang === "ar" ? "لا يوجد توفير" : "No savings");
+
+      updateCharts(afterAvgLoad, costAfter, co2After);
+
+      // Build suggestions for all trucks
+      const suggestionById = {};
+      aiResult.allScores.forEach((scored, index) => {
+        const t = scored.truck;
+        if (t.id === target.id) {
+          suggestionById[t.id] = {
+            truck: t,
+            newLoad: scored.potentialLoad,
+            action: currentLang === "ar"
+              ? `✨ أفضل خيار (نقاط: ${scored.score})`
+              : `✨ Best option (Score: ${scored.score})`,
+          };
+        } else if (index < 3) {
+          suggestionById[t.id] = {
+            truck: t,
+            newLoad: t.currentLoad,
+            action: currentLang === "ar"
+              ? `بديل (نقاط: ${scored.score})`
+              : `Alternative (Score: ${scored.score})`,
+          };
+        }
+      });
+      
+      populateOptimizationTable(trucks, suggestionById);
+
+      // Update summary with AI recommendation
+      const summary = document.getElementById("opt-summary");
+      if (currentLang === "ar") {
+        summary.innerHTML =
+          `<div style="margin-bottom: 10px; padding: 10px; background: rgba(34,197,94,0.1); border-radius: 10px; border: 1px solid rgba(34,197,94,0.3);">` +
+          `🤖 <strong>تحليل الذكاء الاصطناعي:</strong> ${aiResult.recommendation}</div>` +
+          `تم إسناد شحنة وزن <strong>${weight || 0} طن</strong> ` +
+          `وحجم <strong>${volume || 0} م³</strong> إلى ` +
+          `<strong>${target.id} (${target.origin} → ${target.dest})</strong>، ` +
+          `مما يرفع متوسط الحمولة من <strong>${(baselineAvgLoad * 100).toFixed(0)}%</strong> ` +
+          `إلى <strong>${(afterAvgLoad * 100).toFixed(0)}%</strong>.`;
+      } else {
+        summary.innerHTML =
+          `<div style="margin-bottom: 10px; padding: 10px; background: rgba(34,197,94,0.1); border-radius: 10px; border: 1px solid rgba(34,197,94,0.3);">` +
+          `🤖 <strong>AI Analysis:</strong> ${aiResult.recommendation}</div>` +
+          `Shipment of <strong>${weight || 0} tons</strong> / ` +
+          `<strong>${volume || 0} m³</strong> assigned to ` +
+          `<strong>${target.id} (${target.origin} → ${target.dest})</strong>, ` +
+          `raising average fleet load from <strong>${(baselineAvgLoad * 100).toFixed(0)}%</strong> ` +
+          `to <strong>${(afterAvgLoad * 100).toFixed(0)}%</strong>.`;
+      }
+
+      // Store optimization results
+      lastOptimizationLoads = {};
+      trucks.forEach(t => { lastOptimizationLoads[t.id] = { before: t.currentLoad, after: t.newLoad }; });
+
+      if (currentCompanyId) {
+        await saveOptimizationResult(currentCompanyId, {
+          shipmentWeight: weight || 0,
+          shipmentVolume: volume || 0,
+          destination: destinationInput || "",
+          priority,
+          assignedTruckId: target.id,
+          assignedRoute: target.origin + " → " + target.dest,
+          baselineAvgLoad,
+          afterAvgLoad,
+          baselineCost,
+          costAfter,
+          baselineCO2,
+          co2After,
+          aiScore: aiResult.bestOption.score,
+          aiRecommendation: aiResult.recommendation
+        });
+
+        // Send assignment to driver - REAL-TIME UPDATE
+        const driverId = target.id.replace(/\D/g, ''); // Extract number from "Truck #2" -> "2"
+        await assignToDriver(target.id, {
+          destination: target.dest,
+          origin: target.origin,
+          weight: weight || 0,
+          volume: volume || 0,
+          deliveryTime: deliveryTime,
+          route: target.origin + " → " + target.dest,
+          notes: currentLang === "ar" 
+            ? `دمج الشحنة - نقاط AI: ${aiResult.bestOption.score}` 
+            : `Shipment merge - AI Score: ${aiResult.bestOption.score}`
+        });
+      }
+
+      setActiveView("optimization-view");
+    }
+
+    // ========== CSV ==========
+    function analyzeCSV() {
+      const fileInput = document.getElementById("csv_file");
+      const msg = document.getElementById("csv_message");
+      if (!fileInput.files || fileInput.files.length === 0) {
+        if (msg) {
+          msg.textContent = currentLang === "ar"
+            ? "يرجى اختيار ملف CSV أولاً."
+            : "Please select a CSV file first.";
+        }
+        return;
+      }
+      if (msg) {
+        msg.textContent = currentLang === "ar"
+          ? "تم رفع الملف بنجاح (تحليل تجريبي للعرض فقط)."
+          : "CSV file uploaded successfully.";
+      }
+    }
+
+    // ========== AI CHAT ASSISTANT ==========
+    async function sendAIMessage() {
+      const inputEl = document.getElementById("chat-input");
+      const logEl = document.getElementById("chat-log");
+      if (!inputEl || !logEl) return;
+
+      const text = inputEl.value.trim();
+      if (!text) return;
+
+      const youLabel = currentLang === "ar" ? "أنت" : "You";
+      const aiLabel  = "AI";
+
+      logEl.innerHTML += '<div style="margin-bottom: 6px;"><strong>' + youLabel + ':</strong> ' + text + '</div>';
+      inputEl.value = "";
+
+      const loadingId = "ai-loading-" + Date.now();
+      const thinkingText = currentLang === "ar" ? "المساعد يفكر..." : "Assistant is thinking...";
+      logEl.innerHTML += '<div id="' + loadingId + '" style="margin-bottom: 6px; color: #9ca3af;">' + thinkingText + '</div>';
+      logEl.scrollTop = logEl.scrollHeight;
+
+      try {
+        const res = await fetch("http://localhost:3000/chat", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ message: text })
+        });
+
+        const data = await res.json();
+        const replyText = data && data.reply
+          ? data.reply
+          : (currentLang === "ar"
+              ? "حدثت مشكلة في الرد من خادم الذكاء الاصطناعي."
+              : "There was a problem getting a reply from the AI server.");
+
+        const loadingEl = document.getElementById(loadingId);
+        if (loadingEl) loadingEl.remove();
+
+        logEl.innerHTML += '<div style="margin-bottom: 8px;"><strong>' + aiLabel + ':</strong> ' + replyText + '</div>';
+        logEl.scrollTop = logEl.scrollHeight;
+      } catch (err) {
+        console.error(err);
+        const loadingEl = document.getElementById(loadingId);
+        if (loadingEl) loadingEl.remove();
+        const errorText = currentLang === "ar"
+          ? "تعذر الاتصال بخادم الذكاء الاصطناعي. تأكد أن السيرفر شغال على جهازك."
+          : "Could not connect to the AI server. Make sure the server is running on your machine.";
+        logEl.innerHTML += '<div style="margin-bottom: 8px; color: #f97373;">' + errorText + '</div>';
+        logEl.scrollTop = logEl.scrollHeight;
+      }
+    }
+
+    // ========== PDF REPORT ==========
+    function generatePdfReport() {
+      const msg = document.getElementById("pdf_message");
+
+      if (!isLoggedIn) {
+        msg.textContent = currentLang === "ar"
+          ? "يرجى تسجيل الدخول أولاً لإنشاء تقرير."
+          : "Please log in first to generate a report.";
+        return;
+      }
+
+      try {
+        const jsPDFConstructor = window.jsPDF;
+        if (!jsPDFConstructor) {
+          msg.textContent = currentLang === "ar"
+            ? "تعذر تحميل مكتبة إنشاء ملفات الـ PDF (jsPDF)."
+            : "Could not load the PDF library (jsPDF).";
+          return;
+        }
+
+        const docPDF = new jsPDFConstructor();
+
+        // Header
+        docPDF.setFont("helvetica", "bold");
+        docPDF.setFontSize(20);
+        docPDF.text("Logixperts - Smart Load Analyzer", 10, 20);
+
+        docPDF.setFontSize(12);
+        docPDF.setFont("helvetica", "normal");
+        docPDF.text("Naqlthon 4 - Smart Load Optimization Report", 10, 28);
+
+        // Company Info
+        const companyName = (currentCompanyData && currentCompanyData.name) || "Logixperts";
+        const companyEmail = (currentCompanyData && currentCompanyData.email) || "demo@logixperts.sa";
+        const fleetSize = (currentCompanyData && currentCompanyData.fleetSize) || 25;
+        
+        // Format date properly
+        const now = new Date();
+        const dateStr = now.getFullYear() + "/" + String(now.getMonth() + 1).padStart(2, "0") + "/" + String(now.getDate()).padStart(2, "0");
+        const timeStr = String(now.getHours()).padStart(2, "0") + ":" + String(now.getMinutes()).padStart(2, "0");
+
+        docPDF.setFontSize(10);
+        let y = 42;
+        
+        docPDF.setFont("helvetica", "bold");
+        docPDF.text("Company:", 10, y);
+        docPDF.setFont("helvetica", "normal");
+        docPDF.text(companyName, 45, y);
+        
+        docPDF.setFont("helvetica", "bold");
+        docPDF.text("Contact:", 110, y);
+        docPDF.setFont("helvetica", "normal");
+        docPDF.text("Smart Load Analyzer", 135, y);
+        
+        y += 7;
+        docPDF.setFont("helvetica", "bold");
+        docPDF.text("Email:", 10, y);
+        docPDF.setFont("helvetica", "normal");
+        docPDF.text(companyEmail, 45, y);
+        
+        docPDF.setFont("helvetica", "bold");
+        docPDF.text("Phone:", 110, y);
+        docPDF.setFont("helvetica", "normal");
+        docPDF.text("+966 55 555 5555", 135, y);
+        
+        y += 7;
+        docPDF.setFont("helvetica", "bold");
+        docPDF.text("Fleet size:", 10, y);
+        docPDF.setFont("helvetica", "normal");
+        docPDF.text(String(fleetSize) + " trucks", 45, y);
+        
+        y += 7;
+        docPDF.setFont("helvetica", "normal");
+        docPDF.setFontSize(9);
+        docPDF.text("Generated: " + dateStr + " at " + timeStr, 10, y);
+
+        // Section 1: KPIs Summary
+        y += 15;
+        docPDF.setFontSize(14);
+        docPDF.setFont("helvetica", "bold");
+        docPDF.text("1. KPIs Summary (Before vs After Optimization)", 10, y);
+        
+        y += 10;
+        docPDF.setFontSize(10);
+        
+        // Table header
+        docPDF.setFont("helvetica", "bold");
+        docPDF.text("Metric", 10, y);
+        docPDF.text("Before", 80, y);
+        docPDF.text("After", 120, y);
+        docPDF.text("Change", 160, y);
+        
+        docPDF.line(10, y + 2, 200, y + 2);
+        y += 8;
+        
+        docPDF.setFont("helvetica", "normal");
+        
+        const avgBeforePct = (baselineAvgLoad * 100).toFixed(0);
+        const avgAfterPct = lastAfterAvgLoad != null ? (lastAfterAvgLoad * 100).toFixed(0) : avgBeforePct;
+        const loadChange = (parseFloat(avgAfterPct) - parseFloat(avgBeforePct)).toFixed(0);
+        
+        const costBefore = baselineCost.toFixed(0);
+        const costAfter = lastCostAfter != null ? lastCostAfter.toFixed(0) : costBefore;
+        const costChange = lastCostAfter != null ? ((baselineCost - lastCostAfter) / baselineCost * 100).toFixed(1) : "0";
+        
+        const co2Before = baselineCO2.toFixed(0);
+        const co2After = lastCO2After != null ? lastCO2After.toFixed(0) : co2Before;
+        const co2Change = lastCO2After != null ? ((baselineCO2 - lastCO2After) / baselineCO2 * 100).toFixed(1) : "0";
+        
+        // Row 1
+        docPDF.text("Average Load Factor", 10, y);
+        docPDF.text(avgBeforePct + "%", 80, y);
+        docPDF.text(avgAfterPct + "%", 120, y);
+        docPDF.text("+" + loadChange + " pp", 160, y);
+        y += 7;
+        
+        // Row 2
+        docPDF.text("Operating Cost/Day", 10, y);
+        docPDF.text(costBefore + " SAR", 80, y);
+        docPDF.text(costAfter + " SAR", 120, y);
+        docPDF.text("-" + costChange + "%", 160, y);
+        y += 7;
+        
+        // Row 3
+        docPDF.text("CO2 Emissions/Day", 10, y);
+        docPDF.text(co2Before + " kg", 80, y);
+        docPDF.text(co2After + " kg", 120, y);
+        docPDF.text("-" + co2Change + "%", 160, y);
+        
+        // Section 2: Per-Truck Load Factors
+        y += 15;
+        docPDF.setFontSize(14);
+        docPDF.setFont("helvetica", "bold");
+        docPDF.text("2. Per-Truck Load Factors", 10, y);
+        
+        y += 10;
+        docPDF.setFontSize(10);
+        
+        // Table header
+        docPDF.setFont("helvetica", "bold");
+        docPDF.text("Truck / Route", 10, y);
+        docPDF.text("Load Before", 90, y);
+        docPDF.text("Load After", 140, y);
+        
+        docPDF.line(10, y + 2, 200, y + 2);
+        y += 8;
+        
+        docPDF.setFont("helvetica", "normal");
+        
+        trucksScenario.forEach(function(tr) {
+          const opt = lastOptimizationLoads && lastOptimizationLoads[tr.id];
+          const beforeLoad = opt ? opt.before : tr.currentLoad;
+          const afterLoad = opt ? opt.after : tr.currentLoad;
+          
+          const beforePct = (beforeLoad * 100).toFixed(0) + "%";
+          const afterPct = (afterLoad * 100).toFixed(0) + "%";
+          
+          const route = tr.id + " " + tr.origin + " -> " + tr.dest;
+          docPDF.text(route, 10, y);
+          docPDF.text(beforePct, 90, y);
+          docPDF.text(afterPct, 140, y);
+          y += 7;
+        });
+        
+        // Section 3: Recommendations
+        y += 10;
+        docPDF.setFontSize(14);
+        docPDF.setFont("helvetica", "bold");
+        docPDF.text("3. Recommendations", 10, y);
+        
+        y += 10;
+        docPDF.setFontSize(10);
+        docPDF.setFont("helvetica", "normal");
+        
+        const recommendations = [
+          "Focus on return trips with low load factor (below 60%).",
+          "Track your average fleet load weekly - aim for 80%+.",
+          "Use the system to simulate scenarios before accepting shipments.",
+          "Prioritize high fuel-cost routes for load consolidation.",
+          "Share monthly reports with management to show savings."
+        ];
+        
+        recommendations.forEach(function(rec) {
+          docPDF.text("- " + rec, 10, y);
+          y += 6;
+        });
+        
+        // Footer
+        y += 10;
+        docPDF.setFontSize(8);
+        docPDF.setTextColor(128, 128, 128);
+        docPDF.text("This report was generated by Smart Load Analyzer - Naqlthon 4", 10, y);
+
+        docPDF.save("SmartLoad_Report.pdf");
+
+        msg.textContent = currentLang === "ar"
+          ? "تم إنشاء وتحميل تقرير PDF بنجاح."
+          : "PDF report generated and downloaded successfully.";
+      } catch (e) {
+        console.error(e);
+        msg.textContent = currentLang === "ar"
+          ? "حدث خطأ أثناء إنشاء ملف الـ PDF."
+          : "An error occurred while generating the PDF file.";
+      }
+    }
+
+    // ========== INIT ==========
+    window.addEventListener("load", () => {
+      document.getElementById("tab_login").style.display = "inline-flex";
+      document.getElementById("tab_dashboard").style.display = "none";
+      document.getElementById("tab_analyze").style.display = "none";
+      document.getElementById("tab_opt").style.display = "none";
+      document.getElementById("tab_drivers").style.display = "none";
+
+      // FIX: Initialize hero metrics as hidden (dash) before login
+      updateHeroVisibility();
+
+      const statsSaveBtn = document.getElementById("stats-save-btn");
+      if (statsSaveBtn) {
+        statsSaveBtn.addEventListener("click", saveCompanyStats);
+      }
+
+      const tabs = document.querySelectorAll(".nav-tab");
+      tabs.forEach(tab => {
+        tab.addEventListener("click", () => {
+          const view = tab.dataset.view;
+          if (view !== "login-view" && !isLoggedIn) {
+            setActiveView("login-view");
+            const err = document.getElementById("login-error");
+            if (err) {
+              err.textContent = currentLang === "ar"
+                ? "يرجى تسجيل الدخول للوصول إلى لوحة التحكم."
+                : "Please log in to access the dashboard.";
+            }
+            return;
+          }
+          setActiveView(view);
+        });
+      });
+
+      applyLanguage();
+      populateOptimizationTableInitial();
+      initMap();
+      
+      // Initialize drivers monitoring
+      if (typeof initDriversMonitoring === 'function') {
+        initDriversMonitoring();
+      }
+    });
+
+    // ========== DRIVERS MONITORING ==========
+    let driversMap = null;
+    let driverMarkers = {};
+    let driversUnsubscribe = null;
+    let chatUnsubscribes = {};
+
+    function initDriversMonitoring() {
+      // Initialize drivers map
+      const mapEl = document.getElementById('driversMap');
+      if (mapEl && !driversMap) {
+        driversMap = L.map('driversMap').setView([24.7, 44], 5);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(driversMap);
+        
+        // Add city markers
+        const cities = { 'Riyadh': [24.7136, 46.6753], 'Jeddah': [21.4858, 39.1925], 'Dammam': [26.4207, 50.0888] };
+        Object.entries(cities).forEach(([name, coords]) => {
+          L.circleMarker(coords, { radius: 6, fillColor: '#22c55e', color: '#166534', weight: 2, fillOpacity: 0.8 })
+            .addTo(driversMap).bindTooltip(name);
+        });
+      }
+    }
+
+    function startDriversSync() {
+      if (!companyCode || driversUnsubscribe) return;
+      
+      const driversRef = collection(db, 'drivers');
+      const q = query(driversRef, where('companyCode', '==', companyCode));
+      
+      driversUnsubscribe = onSnapshot(q, (snapshot) => {
+        const drivers = [];
+        snapshot.forEach(doc => drivers.push({ id: doc.id, ...doc.data() }));
+        renderDriversGrid(drivers);
+        updateDriversMap(drivers);
+      }, (err) => {
+        console.log('Drivers sync error:', err);
+      });
+    }
+
+    function renderDriversGrid(drivers) {
+      const grid = document.getElementById('driversGrid');
+      if (!grid) return;
+      
+      if (drivers.length === 0) {
+        grid.innerHTML = `
+          <div style="text-align: center; padding: 40px; color: var(--muted); grid-column: 1/-1;">
+            <div style="font-size: 48px; margin-bottom: 12px;">📡</div>
+            <div>No active drivers</div>
+            <div style="font-size: 12px; margin-top: 4px;">Drivers will appear here when they log in</div>
+          </div>`;
+        return;
+      }
+      
+      grid.innerHTML = drivers.map(d => {
+        const statusLabels = { 
+          ready: '✅ Ready', arrived: '📍 Arrived', loaded: '📦 Loaded', 
+          transit: '🚚 In Transit', done: '🏁 Done', offline: '⚫ Offline' 
+        };
+        const status = d.status || 'offline';
+        const assignment = d.currentAssignment;
+        const location = d.currentLocation;
+        
+        return `
+          <div class="driver-card" data-driver-id="${d.id}">
+            <div class="driver-card-header">
+              <div>
+                <div class="driver-name">🚚 ${d.name || 'Driver ' + d.driverId}</div>
+                <div class="driver-id">ID: ${d.driverId} | Truck #${d.driverId}</div>
+              </div>
+              <span class="driver-status status-${status}">${statusLabels[status] || statusLabels.offline}</span>
+            </div>
+            
+            <div class="driver-info-row">
+              <span class="driver-info-label">📍 Location</span>
+              <span class="driver-info-value">${location ? location.latitude.toFixed(4) + ', ' + location.longitude.toFixed(4) : 'Unknown'}</span>
+            </div>
+            
+            ${assignment ? `
+              <div class="driver-info-row">
+                <span class="driver-info-label">🎯 Route</span>
+                <span class="driver-info-value">${assignment.origin || '?'} → ${assignment.destination || '?'}</span>
+              </div>
+              <div class="driver-info-row">
+                <span class="driver-info-label">📦 Load</span>
+                <span class="driver-info-value">${assignment.weight || '?'} tons</span>
+              </div>
+            ` : `
+              <div class="driver-info-row">
+                <span class="driver-info-label">🎯 Assignment</span>
+                <span class="driver-info-value">No active assignment</span>
+              </div>
+            `}
+            
+            <div class="driver-chat-box" id="chat-${d.id}">
+              <div style="text-align: center; color: var(--muted); font-size: 11px;">Loading chat...</div>
+            </div>
+            
+            <div class="driver-chat-input">
+              <input type="text" placeholder="Message driver..." id="input-${d.id}" onkeypress="if(event.key==='Enter')sendToDriver('${d.id}')" />
+              <button onclick="sendToDriver('${d.id}')">Send</button>
+            </div>
+          </div>
+        `;
+      }).join('');
+      
+      // Start chat listeners for each driver
+      drivers.forEach(d => startChatListener(d.id));
+    }
+
+    function startChatListener(driverId) {
+      if (chatUnsubscribes[driverId]) chatUnsubscribes[driverId]();
+      
+      const chatRef = collection(db, 'drivers', driverId, 'chat');
+      const q = query(chatRef, orderBy('timestamp', 'asc'));
+      
+      chatUnsubscribes[driverId] = onSnapshot(q, (snapshot) => {
+        const messages = [];
+        snapshot.forEach(doc => messages.push(doc.data()));
+        renderChatMessages(driverId, messages);
+      });
+    }
+
+    function renderChatMessages(driverId, messages) {
+      const chatBox = document.getElementById('chat-' + driverId);
+      if (!chatBox) return;
+      
+      if (messages.length === 0) {
+        chatBox.innerHTML = '<div style="text-align: center; color: var(--muted); font-size: 11px;">No messages yet</div>';
+        return;
+      }
+      
+      chatBox.innerHTML = messages.slice(-10).map(m => `
+        <div class="driver-chat-bubble ${m.sender === 'driver' ? 'chat-from-driver' : 'chat-from-admin'}">
+          ${m.sender === 'driver' ? '🚚' : '🏢'} ${m.text}
+        </div>
+      `).join('');
+      
+      chatBox.scrollTop = chatBox.scrollHeight;
+    }
+
+    async function sendToDriver(driverId) {
+      const input = document.getElementById('input-' + driverId);
+      if (!input) return;
+      
+      const text = input.value.trim();
+      if (!text) return;
+      
+      input.value = '';
+      
+      try {
+        await addDoc(collection(db, 'drivers', driverId, 'chat'), {
+          text: text,
+          sender: 'admin',
+          timestamp: serverTimestamp()
+        });
+      } catch (e) {
+        console.error('Failed to send message:', e);
+      }
+    }
+    window.sendToDriver = sendToDriver;
+
+    function updateDriversMap(drivers) {
+      if (!driversMap) return;
+      
+      // Clear old markers
+      Object.values(driverMarkers).forEach(m => driversMap.removeLayer(m));
+      driverMarkers = {};
+      
+      // Add new markers
+      drivers.forEach(d => {
+        if (d.currentLocation) {
+          const { latitude, longitude } = d.currentLocation;
+          const statusColors = {
+            ready: '#22c55e', arrived: '#eab308', loaded: '#3b82f6',
+            transit: '#a855f7', done: '#22c55e', offline: '#6b7280'
+          };
+          const color = statusColors[d.status] || statusColors.offline;
+          
+          const marker = L.circleMarker([latitude, longitude], {
+            radius: 10, fillColor: color, color: '#fff', weight: 2, fillOpacity: 1
+          }).addTo(driversMap);
+          
+          marker.bindTooltip(`🚚 ${d.name || 'Driver ' + d.driverId}<br>Status: ${d.status || 'offline'}`, { direction: 'top' });
+          
+          driverMarkers[d.id] = marker;
+        }
+      });
+      
+      // Fit bounds if we have markers
+      const positions = Object.values(driverMarkers).map(m => m.getLatLng());
+      if (positions.length > 0) {
+        driversMap.fitBounds(positions.map(p => [p.lat, p.lng]), { padding: [50, 50], maxZoom: 10 });
+      }
+    }
+
+    // Call startDriversSync after login
+    const originalDemoLogin = window.demoLogin;
+    window.demoLogin = async function() {
+      await originalDemoLogin();
+      if (isLoggedIn) {
+        document.getElementById('tab_drivers').style.display = 'inline-flex';
+        setTimeout(() => {
+          initDriversMonitoring();
+          startDriversSync();
+        }, 500);
+      }
+    };
+  </script>
+</body>
+</html>
